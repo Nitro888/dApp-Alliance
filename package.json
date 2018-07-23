@@ -1,0 +1,42 @@
+{
+  "name": "toonist",
+  "version": "1.0.0",
+  "engines": {
+    "node": "latest",
+    "npm":"latest"
+  },
+  "description": "",
+  "scripts": {
+    "start": "node server.js",
+    "postinstall": "webpack -p"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "web3": "latest",
+    "keythereum": "latest",
+    "express": "latest",
+    "express-session": "latest",
+    "compression": "latest",
+    "redis": "latest",
+    "connect-redis": "latest",
+    "body-parser": "latest",
+    "multer": "latest",
+    "socket.io": "latest",
+    "fs": "latest",
+    "async": "latest",
+    "vue": "latest",
+    "vue-loader": "latest",
+    "vue-template-compiler": "latest",
+    "bootstrap-vue": "latest",
+    "webpack": "latest",
+    "webpack-cli": "latest",
+    "babel": "latest",
+    "babel-core": "latest",
+    "babel-loader": "latest",
+    "style-loader": "latest",
+    "css-loader": "latest",
+    "file-loader": "latest"
+  }
+}
