@@ -33,10 +33,10 @@ contract _Base {
         require(msg.sender==owner);
         _;
     }
-    event PACK(address indexed, address indexed);
-    event ABOUT(bytes _msgPack);
-    function about(bytes _msgPack) onlyOwner public {
-        emit ABOUT(_msgPack);
+    event PACK(address indexed, address indexed, address indexed);  // pack,creator,store
+    event INFO(bytes _msgPack);
+    function info(bytes _msgPack) onlyOwner public {
+        emit INFO(_msgPack);
     }
 }
 
@@ -44,41 +44,49 @@ contract _Base {
 // Pack is group of items.
 // Pack has information of pack and items.
 //------------------------------------------------------------------------------
-contract Pack is _Base{
+contract Pack is _Base {
     address internal    store;
 
     constructor (address _creator, bytes _msgPack) public {
         owner   = _creator;
         store   = msg.sender;
-        emit ABOUT(_msgPack);
-        emit PACK(owner,store);
+        emit INFO(_msgPack);
+        emit PACK(this,owner,store);
+    }
+
+    modifier onlyStore() {
+        require(msg.sender==store);
+        _;
     }
 
     event ITEM(uint indexed _index, uint length, bytes _msgPack);
-    function item(uint _index, uint _length, bytes _msgPack) public {
-        require(msg.sender==store);
+    function item(uint _index, uint _length, bytes _msgPack) onlyStore public {
         emit ITEM(_index,_length,_msgPack);
     }
 
     event BUY(address indexed, uint indexed, uint, uint);
-    function buy(address _buy, uint _item, uint _creator, uint _shop) public {
-        require(msg.sender==store);
+    function buy(address _buy, uint _item, uint _creator, uint _shop) onlyStore public {
         emit BUY(_buy,_item,_creator,_shop);
     }
 }
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-// _Obj is root of Creator and Store.
+// _Account is root of Creator and Store.
 // for transfer erc20 and eth.
 // and it has information of contract.
 //------------------------------------------------------------------------------
-contract _Account is _Base{
+contract _Account is _Base {
     address internal    manager;
 
     constructor () public {
         manager = msg.sender;
     }
+    function ownerShip(address _owner) public {
+        require(msg.sender==manager);
+        owner   = _owner;
+    }
+
     function () payable public {}
 
     function balanceOf(address _erc20) public constant returns (uint256) {
@@ -99,33 +107,37 @@ contract _Account is _Base{
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-contract Creator is _Account{
+contract Creator is _Account {
     constructor (address _owner,bytes _msgPack) public {
         owner   = _owner;
-        emit ABOUT(_msgPack);
+        emit INFO(_msgPack);
     }
 
-    function pack(address _store, bytes _msgPack) onlyOwner public {
-        require(Manager(manager).isStore(_store));
-        emit PACK(Store(_store).pack(_msgPack),_store);
+    modifier isStore(address _store) {
+        require(Manager(manager).storeOwner(_store)!=address(0));
+        _;
     }
-    function item(address _s, address _p, uint _price, bool _weekly, bytes _msgPack) onlyOwner public {
-        require(Manager(manager).isStore(_s));
-        Store(_s).item(_p,_price,_weekly,_msgPack);
+
+    function pack(address _store, bytes _msgPack) onlyOwner isStore(_store) public {
+        emit PACK(Store(_store).pack(_msgPack),this,_store);
     }
-    function itemPrice(address _s, address _p, uint _i, uint _price) onlyOwner public {
-        require(Manager(manager).isStore(_s));
-        Store(_s).itemPrice(_p,_i,_price);
+    function packInfo(address _pack, bytes _msgPack) onlyOwner public {
+        Pack(_pack).info(_msgPack);
     }
-    function itemAbout(address _s, address _p, uint _i, bytes _msgPack) onlyOwner public {
-        require(Manager(manager).isStore(_s));
-        Store(_s).itemAbout(_p,_i,_msgPack);
+    function item(address _store, address _pack, uint _price, bool _weekly, bytes _msgPack) onlyOwner isStore(_store) public {
+        Store(_store).item(_pack,_price,_weekly,_msgPack);
+    }
+    function itemPrice(address _store, address _pack, uint _item, uint _price) onlyOwner isStore(_store)  public {
+        Store(_store).itemPrice(_pack,_item,_price);
+    }
+    function itemInfo(address _store, address _pack, uint _item, bytes _msgPack) onlyOwner isStore(_store) public {
+        Store(_store).itemInfo(_pack,_item,_msgPack);
     }
 }
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-contract Store is _Account, SafeMath{
+contract Store is _Account, SafeMath {
     struct _item {
         uint                    price;
         bool                    weekly;
@@ -153,7 +165,7 @@ contract Store is _Account, SafeMath{
         share       = _share;
         shareStart  = _shareStart;
         erc20       = _erc20;
-        emit ABOUT(_msgPack);
+        emit INFO(_msgPack);
     }
 
     function status() constant public returns (uint,uint,address) {
@@ -161,10 +173,10 @@ contract Store is _Account, SafeMath{
     }
 
     function pack(bytes _msgPack) public returns (address) {
-        require(Manager(manager).isCreator(msg.sender));
+        require(Manager(manager).creatorOwner(msg.sender)!=address(0));
         address temp        = new Pack(msg.sender,_msgPack);
         packs[temp].creator = msg.sender;
-        emit PACK(temp,msg.sender);
+        emit PACK(temp,msg.sender,this);
         return temp;
     }
 
@@ -178,28 +190,28 @@ contract Store is _Account, SafeMath{
         require(packs[_p].items.length>_i);
         packs[_p].items[_i].price   = _price;
     }
-    function itemAbout(address _p, uint _i, bytes _msgPack) public {
+    function itemInfo(address _p, uint _i, bytes _msgPack) public {
         require(packs[_p].creator==msg.sender);
         require(packs[_p].items.length>_i);
         Pack(_p).item(_i, packs[_p].items.length, _msgPack);
     }
 
-    function itemCanV(address _p, uint _i) constant public returns (bool) {
+    function itemCanVote(address _p, uint _i) constant public returns (bool) {
         return !packs[_p].items[_i].vote[msg.sender] && (packs[_p].items[_i].user[msg.sender] > 0);
     }
-    function itemVUp(address _p, uint _i) public {
+    function itemVoteUp(address _p, uint _i) public {
         require(packs[_p].items.length>_i);
-        require(itemCanV(_p,_i));
+        require(itemCanVote(_p,_i));
         packs[_p].items[_i].pointUp             = safeAdd(packs[_p].items[_i].pointUp,1);
         packs[_p].items[_i].vote[msg.sender]    = true;
     }
-    function itemVDn(address _p, uint _i) public {
+    function itemVoteDn(address _p, uint _i) public {
         require(packs[_p].items.length>_i);
-        require(itemCanV(_p,_i));
+        require(itemCanVote(_p,_i));
         packs[_p].items[_i].pointDn             = safeAdd(packs[_p].items[_i].pointUp,1);
         packs[_p].items[_i].vote[msg.sender]    = true;
     }
-    function itemStatus(address _p, uint _i) constant public returns (uint,bool,uint,uint,uint,bool,bool) {
+    function about(address _p, uint _i) constant public returns (uint,bool,uint,uint,uint,bool,bool) {
         require(packs[_p].items.length>_i);
         return (packs[_p].items[_i].price,packs[_p].items[_i].weekly,packs[_p].items[_i].count,packs[_p].items[_i].pointUp,packs[_p].items[_i].pointDn,canBuy(_p,_i),canUse(_p,_i));
     }
@@ -243,29 +255,42 @@ contract Store is _Account, SafeMath{
 
 //------------------------------------------------------------------------------
 contract Manager {
-    mapping(address=>bool) creators;
-    event CREATOR(address indexed _owner, address indexed _creator);
-    function makeCreator(bytes _msgPack) public returns (address) {
+    mapping(address=>address) creators;
+    event CREATOR(address indexed _creator, address indexed _owner, address indexed _from);
+    function creator(bytes _msgPack) public returns (address) {
         address temp    = new Creator(msg.sender,_msgPack);
-        creators[temp]  = true;
-        emit CREATOR(msg.sender,temp);
+        creators[temp]  = msg.sender;
+        emit CREATOR(temp,msg.sender,address(0));
         return temp;
     }
-    function isCreator(address _who) public constant returns (bool) {
-        return creators[_who];
+    function creatorOwner(address _creator) public constant returns (address){
+        return creators[_creator];
+    }
+    function creatorOwnership(address _creator, address _owner) public {
+        require(creators[_creator]==msg.sender&&address(0)!=_owner);
+        creators[_creator]  = _owner;
+        Creator(_creator).ownerShip(_owner);
+        emit CREATOR(_creator,_owner,msg.sender);
     }
 
-    mapping(address=>bool) stores;
-    event STORE(address indexed _owner, address indexed _store, address indexed _erc20);
-    function makeStore(bytes _msgPack,uint _share, uint _shareStart,address _erc20) public returns (address _shop) {
+    mapping(address=>address) stores;
+    event STORE(address indexed _store, address indexed _to, address indexed _from);
+    event TOKEN(address indexed _store, address indexed _erc20);
+    function store(bytes _msgPack,uint _share, uint _shareStart,address _erc20) public returns (address _shop) {
         address temp    = new Store(msg.sender,_msgPack,_share,_shareStart,_erc20);
-        stores[temp]    = true;
-        emit STORE(msg.sender,temp,_erc20);
+        stores[temp]    = msg.sender;
+        emit STORE(temp,msg.sender,address(0));
+        emit TOKEN(temp,_erc20);
         return temp;
-
     }
-    function isStore(address _who) public constant returns (bool) {
-        return stores[_who];
+    function storeOwner(address _store) public constant returns (address){
+        return stores[_store];
+    }
+    function storeOwnership(address _store, address _owner) public {
+        require(stores[_store]==msg.sender&&address(0)!=_owner);
+        stores[_store]     = _owner;
+        Store(_store).ownerShip(_owner);
+        emit STORE(_store,_owner,msg.sender);
     }
 }
 //------------------------------------------------------------------------------
