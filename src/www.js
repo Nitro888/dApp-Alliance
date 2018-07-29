@@ -39,7 +39,13 @@ let main = {
       </b-carousel>
       <b-modal ref="refModal" :size="modal.size" :title="modal.title" :header-bg-variant="modal.headerBg" :header-text-variant="modal.headerTxt" hide-footer>
         <div class="d-block text-center" v-html="modal.html"></div>
-        <store-item v-for="item in modal.items" v-bind:item="item" v-bind:key="item.store"></store-item>
+        <b-input-group v-for='item in modal.items' v-bind:item="item" v-bind:key="item.store" size="sm" class="mb-1">
+          <b-form-input :value="item.key" readonly></b-form-input>
+          <b-input-group-append>
+            <b-btn size="sm" v-if="item.action0" v-on:click="item.action0(item.key);"><i class="fas fa-file-invoice-dollar"></i></b-btn>
+            <b-btn size="sm" v-if="item.action1" v-on:click="item.action1(item.key);"><i class="fas fa-file-signature"></i></b-btn>
+          </b-input-group-append>
+        </b-input-group>
       </b-modal>
       <b-modal ref="refModalContract" :title="contract.title" header-bg-variant="dark" header-text-variant="light" hide-footer>
         <b-form-group size="sm" label="Contract" v-if="contract.mode!=0">
@@ -119,23 +125,23 @@ let main = {
         contents:[
           {left:false,title:"WALLET",image:'c0.jpg',
             inputs:[
-              {input:false,key:'wallet',title:'How to get a wallet.',desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'}]
+              {input:false,key:'wallet',priceMode:false,title:'How to get a wallet.',desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'}]
           },
           {left:true,title:"AVATAR",image:'c1.jpg',
             inputs:[
-              {input:true,key:'avatar store',title:'How to get your avatar store.',desc:'If you want to create a avatar store, create wallet and login first.<br/>After login, click <i class="fas fa-plus"></i> button, and write store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
+              {input:true,key:'avatar store',priceMode:true,title:'How to get your avatar store.',desc:'If you want to create a avatar store, create wallet and login first.<br/>After login, click <i class="fas fa-plus"></i> button, and write store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:false,title:"STORE",image:'c2.jpg',
             inputs:[
-              {input:true,key:'store',title:'How to get your digital contents store.',desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
-              {input:true,key:'pack',title:'How to create digital contents pack at store.',desc:'After login, click <i class="fas fa-plus"></i> button, and write pack name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
+              {input:true,key:'store',priceMode:false,title:'How to get your digital contents store.',desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
+              {input:true,key:'pack',priceMode:true,title:'How to create digital contents pack at store.',desc:'After login, click <i class="fas fa-plus"></i> button, and write pack name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:true,title:"CREATOR",image:'c3.jpg',
             inputs:[
-              {input:true,key:'creator',title:'How to get contents creator account.',desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
+              {input:true,key:'creator',priceMode:false,title:'How to get contents creator account.',desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
-          {left:false,title:"TICKET",image:'c4.jpg',inputs:[{input:false,key:'ticket',title:'Create ticket booth for yours.',desc:'Coming soon.'}]},
-          {left:true,title:"CASINO",image:'c5.jpg',inputs:[{input:false,key:'casino',title:'Create your own casino and play.',desc:'Coming soon.'}]},
+          {left:false,title:"TICKET",image:'c4.jpg',inputs:[{input:false,key:'ticket',priceMode:false,title:'Create ticket booth for yours.',desc:'Coming soon.'}]},
+          {left:true,title:"CASINO",image:'c5.jpg',inputs:[{input:false,key:'casino',priceMode:false,title:'Create your own casino and play.',desc:'Coming soon.'}]},
         ]
       }
     },
@@ -148,12 +154,14 @@ let main = {
       }
     },
     methods: {
+      //------------------------------------------------------------------------------------------------
       onSlideStart (slide) {
         this.sliding = true
       },
       onSlideEnd (slide) {
         this.sliding = false
       },
+      //------------------------------------------------------------------------------------------------
       showModal(title,size,header,html) {
         this.modal.title          = title;
         this.modal.size           = size;
@@ -167,8 +175,67 @@ let main = {
         this.modal.html           = html;
         this.modal.items          = items;
       },
+      //------------------------------------------------------------------------------------------------
+      _resetData(show) {
+        for (let field in this.json)
+          this.json[field] = '';
+        for (let field in this.data) {
+          this.data[field].show   = false;
+          this.data[field].value  = '';
+        }
+        for(let i = 0 ; i < show.length ; i++ )
+          this.data[show[i]].show   = true;
+      },
+      _searchOwner(contract,action0,action1,callback){
+        let myAddress = this.wallet.web3.utils.padLeft(this.wallet.address(),64);
+        let topics    = 'topic0='+contract.topic0+'&topic2='+myAddress+'&topic3='+myAddress+'&topic2_3_opr=or';
+        this.wallet.logs(contract.address,topics,(data)=>{
+          let list = [];
+          for(let i = 0 ; i < data.length ; i++) {
+            let key   = '0x'+data[i].topics[1].toString().slice(-40).toLowerCase();
+            let owner = '0x'+data[i].topics[2].toString().slice(-40).toLowerCase();
+            let from  = '0x'+data[i].topics[3].toString().slice(-40).toLowerCase();
+
+            if(owner==this.wallet.address().toLowerCase())
+              list.push({key:key,owner:owner,from:from,action0:action0,action1:action1});
+            else {
+              let index = list.findIndex(x=>x.store==store);
+              if(index>-1)
+                list.splice(index,1);
+            }
+          }
+          callback(list);
+        });
+      },
+      _sendTx(address,password,value,data) {
+        if(data!=null)
+          this.wallet.sendTx(address,password,value,data,(e)=>{this.common.state=false;this.common.message=e;},(h)=>{this.common.state=true;this.common.message="Tx:"+h;},(r)=>{this.common.state=true;this.common.message="Success";});
+      },
+      //------------------------------------------------------------------------------------------------
       showContractList(key) {
         this.showModal("List of your "+key,"md",'dark','now loading...');
+        switch (key) {
+          case 'avatar store':
+            this._searchOwner({address:aMgr.address,topic0:aMgr.abi[11]['signature']},
+              (address)=>{this.showContract("Edit "+key,key,2,address);},
+              (address)=>{this.showContract("Edit "+key,key,1,address);},
+              (list)=>{this.updateModal(list.length==0?'Empty':'',list);});
+            break;
+          case 'store':
+            this._searchOwner({address:sMgr.address,topic0:sMgr.abi[7]['signature']},
+              null,
+              (address)=>{this.showContract("Edit "+key,key,1,address);},
+              (list)=>{this.updateModal(list.length==0?'Empty':'',list);});
+            break;
+          case 'pack':
+            break;
+          case 'creator':
+            this._searchOwner({address:sMgr.address,topic0:sMgr.abi[6]['signature']},
+              null,
+              (address)=>{this.showContract("Edit "+key,key,1,address);},
+              (list)=>{this.updateModal(list.length==0?'Empty':'',list);});
+            break;
+        }
       },
       showContract(title,key,mode,address) {
         this.contract.title       = title;
@@ -177,34 +244,29 @@ let main = {
         this.contract.password    = '';
         this.contract.communities = false;
         this.contract.address     = address;
-        this.contract.link        = '#';
+        this.contract.link        = this.wallet.web3.utils.isAddress(address)?this.wallet.option['network']['href']+"/address/"+address:'#';
         this.contract.mode        = mode;
-
-        for (let field in this.json)
-          this.json[field] = '';
-        for (let field in this.data) {
-          this.data[field].show   = false;
-          this.data[field].value  = '';
-        }
 
         switch (key) {
           case 'avatar store':
-            this.showContractData(["price"])
+            this._resetData(["erc20","price"]);
+            break;
+          case 'store':
+            this._resetData(["erc20"]);
             break;
           case 'pack':
-            this.showContractData(["share","shareStart"])
+            this._resetData(["share","shareStart"]);
             break;
           case 'casino':
-            this.showContractData(["price"])
+            this._resetData(["price"]);
+            break;
+          default:
+            this._resetData();
             break;
         }
-
         this.$refs.refModalContract.show();
       },
-      showContractData(show) {
-        for(let i = 0 ; i < show.length ; i++ )
-          this.data[show[i]].show   = true;
-      }
+      //------------------------------------------------------------------------------------------------
     }
 }
 
@@ -221,8 +283,8 @@ Vue.component('content-sub',{
                     </b-input-group-prepend>
                     <b-form-input type="text" placeholder="contract adress" v-model="address"></b-form-input>
                     <b-input-group-append>
-                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="edit(true)"><i class="fas fa-file-invoice-dollar"></i></b-btn>
-                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="edit(false)"><i class="fas fa-file-signature"></i></b-btn>
+                      <b-btn size="sm" v-if="isLogedIn&&sub.priceMode" variant="secondary" v-on:click="edit(2)"><i class="fas fa-file-invoice-dollar"></i></b-btn>
+                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="edit(1)"><i class="fas fa-file-signature"></i></b-btn>
                       <b-btn size="sm" v-if="!isLogedIn" variant="secondary" v-on:click="about()"><i class="fas fa-info"></i></b-btn>
                     </b-input-group-append>
                   </b-input-group>
@@ -257,7 +319,7 @@ Vue.component('content-sub',{
         },
         edit(mode) {
           if(this.wallet.web3&&this.wallet.isAddress()) {
-            app.$children[0].showContract("Edit "+this.sub.key,this.sub.key,mode?2:1,this.address);
+            app.$children[0].showContract("Edit "+this.sub.key,this.sub.key,mode,this.address);
           }
         },
         about() {
@@ -321,11 +383,6 @@ Vue.component('contents',{
       return this.github[this.content.title]?this.github[this.content.title]:null;
     }
   },
-});
-
-Vue.component('store-item', {
-  props: ['item'],
-  template: '<b-input-group size="sm" class="mb-1"><b-form-input :value="item.key" readonly></b-form-input><b-input-group-append><b-btn size="sm" :v-if="!item.callback0" v-on:click="item.callback0(item.key);"><i class="fas fa-file-invoice-dollar"></i></b-btn><b-btn size="sm" :v-if="!item.callback1" v-on:click="item.callback1(item.key);"><i class="fas fa-file-signature"></i></b-btn></b-input-group-append></b-input-group>'
 });
 
 Vue.component('mainvue', main);
