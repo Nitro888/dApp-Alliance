@@ -42,8 +42,10 @@ let main = {
         <b-input-group v-for='item in modal.items' v-bind:item="item" v-bind:key="item.store" size="sm" class="mb-1">
           <b-form-input :value="item.key" readonly></b-form-input>
           <b-input-group-append>
-            <b-btn size="sm" v-if="item.action0" v-on:click="item.action0(item.key);"><i class="fas fa-file-invoice-dollar"></i></b-btn>
-            <b-btn size="sm" v-if="item.action1" v-on:click="item.action1(item.key);"><i class="fas fa-file-signature"></i></b-btn>
+            <b-btn size="sm" v-if="item.actions.owner" variant="outline-danger" v-on:click="item.actions.owner(item.key)"><i class="fas fa-exchange-alt"></i></b-btn>
+            <b-btn size="sm" v-if="item.actions.store" variant="outline-danger" v-on:click="item.actions.store(item.key)"><i class="fas fa-store"></i></b-btn>
+            <b-btn size="sm" v-if="item.actions.price" variant="outline-primary" v-on:click="item.actions.price(item.key);"><i class="fas fa-file-invoice-dollar"></i></b-btn>
+            <b-btn size="sm" v-if="item.actions.desc" variant="outline-primary" v-on:click="item.actions.desc(item.key);"><i class="fas fa-file-signature"></i></b-btn>
           </b-input-group-append>
         </b-input-group>
       </b-modal>
@@ -57,31 +59,38 @@ let main = {
           </b-input-group>
         </b-form-group>
 
+        <b-form-group size="sm" label="Owner" label-for="owner" v-if="contract.mode!=0">
+          <b-form-input size="sm" type="text" id="owner" placeholder="address of contract owner" v-model="data.owner.value" :readonly="contract.mode!=1"></b-form-input>
+        </b-form-group>
+        <b-form-group size="sm" label="Store" label-for="store" v-if="contract.mode!=0">
+          <b-form-input size="sm" type="text" id="store" placeholder="address of pack store" v-model="data.store.value" :readonly="contract.mode!=1"></b-form-input>
+        </b-form-group>
+
         <b-form-group size="sm" label="Name" label-for="name">
-          <b-form-input size="sm" id="name" placeholder="enter name" v-model="json.title" :readonly="contract.mode>1||!isLogedIn"></b-form-input>
+          <b-form-input size="sm" id="name" placeholder="enter name" v-model="json.title" :readonly="!(contract.mode==0||contract.mode==4)"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Description" label-for="desc">
-          <b-form-textarea size="sm" id="desc" placeholder="enter description" v-model="json.desc" :readonly="contract.mode>1||!isLogedIn"></b-form-textarea>
+          <b-form-textarea size="sm" id="desc" placeholder="enter description" v-model="json.desc" :readonly="!(contract.mode==0||contract.mode==4)"></b-form-textarea>
         </b-form-group>
 
         <b-form-group size="sm" label="Token Address" label-for="token" v-if="data.erc20.show">
-          <b-form-input size="sm" type="text" id="token" placeholder="erc20 token address or '0x0' for ethereum" v-model="data.erc20.value" :readonly="contract.mode!=0||!isLogedIn"></b-form-input>
+          <b-form-input size="sm" type="text" id="token" placeholder="erc20 token address or '0x0' for ethereum" v-model="data.erc20.value" :readonly="contract.mode!=0"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Price" label-for="price" v-if="data.price.show">
-          <b-form-input size="sm" type="number" id="price" placeholder="price of avatar making" v-model="data.price.value" :readonly="contract.mode==1||contract.mode==3||!isLogedIn"></b-form-input>
+          <b-form-input size="sm" type="number" id="price" placeholder="price of avatar making" v-model="data.price.value" :readonly="!(contract.mode==0||contract.mode==3)"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Share" label-for="share" v-if="data.share.show">
-          <b-form-input size="sm" type="number" id="share" placeholder="share with store and creator (0%~100%)" v-model="data.share.value" :readonly="contract.mode==1||contract.mode==3||!isLogedIn"></b-form-input>
+          <b-form-input size="sm" type="number" id="share" placeholder="share with store and creator (0%~100%)" v-model="data.share.value" :readonly="!(contract.mode==0||contract.mode==3)"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Share Start" label-for="shareStart" v-if="data.shareStart.show">
-          <b-form-input size="sm" type="number" id="shareStart" placeholder="share start income" v-model="data.shareStart.value" :readonly="contract.mode==1||contract.mode==3||!isLogedIn"></b-form-input>
+          <b-form-input size="sm" type="number" id="shareStart" placeholder="share start income" v-model="data.shareStart.value" :readonly="!(contract.mode==0||contract.mode==3)"></b-form-input>
         </b-form-group>
 
         <b-btn size="sm" v-b-toggle.communities variant="outline-primary" class="mt-4" block>Communities</b-btn>
         <b-collapse id="communities" v-model="contract.communities">
           <b-card>
             <b-input-group v-for='item in communities' v-bind:key="item.name" size="sm" :prepend='item.icon' class="mb-2">
-              <b-form-input :placeholder="item.placeholder" v-model="json[item.name]" :readonly="contract.mode>1||!isLogedIn"></b-form-input>
+              <b-form-input :placeholder="item.placeholder" v-model="json[item.name]" :readonly="!(contract.mode==0||contract.mode==4)"></b-form-input>
             </b-input-group>
           </b-card>
         </b-collapse>
@@ -90,7 +99,7 @@ let main = {
           <b-input-group size="sm">
             <b-form-input size="sm" type="password" placeholder="password" v-model="contract.password"></b-form-input>
             <b-input-group-append>
-              <b-btn size="sm" variant="info" v-on:click="_createCreator()" :disabled="contract.mode==3"><i class="fas fa-handshake"></i></b-btn>
+              <b-btn size="sm" variant="info" v-on:click="_confirmContract()" :disabled="contract.mode==5"><i class="fas fa-handshake"></i></b-btn>
             </b-input-group-append>
           </b-input-group>
         </b-form-group>
@@ -113,35 +122,35 @@ let main = {
         modal:{title:'',size:'md',headerBg:'',headerTxt:'',html:'',items:[]},
 
         wallet:navbar.wallet,
-        contract:{title:'',state:true,message:'',password:'',communities:false,address:'',link:'#',mode:0},  // 0 = create, 1 = edit title, 2 = edit price, 3 = readonly
+        contract:{title:'',state:true,message:'',password:'',communities:false,address:'',link:'#',mode:0}, // mode 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
         communities:[
           {icon:'<i class="fas fa-at"></i>',name:'e-mail',placeholder:''},
           {icon:'<i class="fab fa-facebook-f"></i>',name:'facebook',placeholder:''},
         ],
 
         json:{title:'',desc:''},
-        data:{erc20:{show:true,value:''},price:{show:true,value:''},shareStart:{show:true,value:''},share:{show:true,value:''}},
+        data:{owner:{show:true,value:''},store:{show:true,value:''},erc20:{show:true,value:''},price:{show:true,value:''},shareStart:{show:true,value:''},share:{show:true,value:''}},
 
         contents:[
           {left:false,title:"WALLET",image:'c0.jpg',
             inputs:[
-              {input:false,key:'wallet',priceMode:false,title:'How to get a wallet.',desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'}]
+              {input:false,key:'wallet',btns:{},title:'How to get a wallet.',desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'}]
           },
           {left:true,title:"AVATAR",image:'c1.jpg',
             inputs:[
-              {input:true,key:'avatar store',priceMode:true,title:'How to get your avatar store.',desc:'If you want to create a avatar store, create wallet and login first.<br/>After login, click <i class="fas fa-plus"></i> button, and write store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
+              {input:true,key:'avatar store',btns:{owner:true,store:false,price:true,desc:true},title:'How to get your avatar store.',desc:'If you want to create a avatar store, create wallet and login first.<br/>After login, click <i class="fas fa-plus"></i> button, and write store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:false,title:"STORE",image:'c2.jpg',
             inputs:[
-              {input:true,key:'store',priceMode:false,title:'How to get your digital contents store.',desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
-              {input:true,key:'pack',priceMode:true,title:'How to create digital contents pack at store.',desc:'After login, click <i class="fas fa-plus"></i> button, and write pack name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
+              {input:true,key:'store',btns:{owner:true,store:false,price:false,desc:true},title:'How to get your digital contents store.',desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
+              {input:true,key:'pack',btns:{owner:true,store:true,price:true,desc:true},title:'How to create digital contents pack at store.',desc:'After login, click <i class="fas fa-plus"></i> button, and write pack name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:true,title:"CREATOR",image:'c3.jpg',
             inputs:[
-              {input:true,key:'creator',priceMode:false,title:'How to get contents creator account.',desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
+              {input:true,key:'creator',btns:{owner:true,store:false,price:false,desc:true},title:'How to get contents creator account.',desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
-          {left:false,title:"TICKET",image:'c4.jpg',inputs:[{input:false,key:'ticket',priceMode:false,title:'Create ticket booth for yours.',desc:'Coming soon.'}]},
-          {left:true,title:"CASINO",image:'c5.jpg',inputs:[{input:false,key:'casino',priceMode:false,title:'Create your own casino and play.',desc:'Coming soon.'}]},
+          {left:false,title:"TICKET",image:'c4.jpg',inputs:[{input:false,key:'ticket',btns:{},title:'Create ticket booth for yours.',desc:'Coming soon.'}]},
+          {left:true,title:"CASINO",image:'c5.jpg',inputs:[{input:false,key:'casino',btns:{},title:'Create your own casino and play.',desc:'Coming soon.'}]},
         ]
       }
     },
@@ -150,7 +159,7 @@ let main = {
         return this.wallet.web3&&this.wallet.isAddress();
       },
       isShow: function () {
-        return this.contract.mode!=3&&this.isLogedIn;
+        return this.contract.mode!=5&&this.isLogedIn;
       }
     },
     methods: {
@@ -186,7 +195,7 @@ let main = {
         for(let i = 0 ; i < show.length ; i++ )
           this.data[show[i]].show   = true;
       },
-      _searchOwner(contract,action0,action1,callback){
+      _searchOwner(contract,actions,callback){
         let myAddress = this.wallet.web3.utils.padLeft(this.wallet.address(),64);
         let topics    = 'topic0='+contract.topic0+'&topic2='+myAddress+'&topic3='+myAddress+'&topic2_3_opr=or';
         this.wallet.logs(contract.address,topics,(data)=>{
@@ -197,7 +206,7 @@ let main = {
             let from  = '0x'+data[i].topics[3].toString().slice(-40).toLowerCase();
 
             if(owner==this.wallet.address().toLowerCase())
-              list.push({key:key,owner:owner,from:from,action0:action0,action1:action1});
+              list.push({key:key,owner:owner,from:from,actions:actions});
             else {
               let index = list.findIndex(x=>x.store==store);
               if(index>-1)
@@ -206,6 +215,14 @@ let main = {
           }
           callback(list);
         });
+      },
+      _confirmContract() {
+        if(this.wallet.web3&&this.wallet.isAddress()) {
+
+        }
+        console.log(this.contract);
+        console.log(this.json);
+        console.log(this.data);
       },
       _sendTx(address,password,value,data) {
         if(data!=null)
@@ -217,27 +234,37 @@ let main = {
         switch (key) {
           case 'avatar store':
             this._searchOwner({address:aMgr.address,topic0:aMgr.abi[11]['signature']},
-              (address)=>{this.showContract("Edit "+key,key,2,address);},
-              (address)=>{this.showContract("Edit "+key,key,1,address);},
+              { owner:(address)=>{this.showContract("Owner "+key,key,1,address);},
+                price:(address)=>{this.showContract("Price "+key,key,3,address);},
+                desc: (address)=>{this.showContract("Description "+key,key,4,address);}},
               (list)=>{this.updateModal(list.length==0?'Empty':'',list);});
             break;
           case 'store':
             this._searchOwner({address:sMgr.address,topic0:sMgr.abi[7]['signature']},
-              null,
-              (address)=>{this.showContract("Edit "+key,key,1,address);},
+              { owner:(address)=>{this.showContract("Owner "+key,key,1,address);},
+                desc: (address)=>{this.showContract("Description "+key,key,4,address);}},
               (list)=>{this.updateModal(list.length==0?'Empty':'',list);});
             break;
           case 'pack':
+            /*
+            this._searchOwner({address:sMgr.address,topic0:sMgr.abi[6]['signature']},
+              { owner:(address)=>{this.showContract("Owner "+key,key,1,address);},
+                store:(address)=>{this.showContract("Store "+key,key,2,address);},
+                price:(address)=>{this.showContract("Price "+key,key,3,address);},
+                desc: (address)=>{this.showContract("Description "+key,key,4,address);}},
+              (list)=>{this.updateModal(list.length==0?'Empty':'',list);});
+            */
             break;
           case 'creator':
             this._searchOwner({address:sMgr.address,topic0:sMgr.abi[6]['signature']},
-              null,
-              (address)=>{this.showContract("Edit "+key,key,1,address);},
+              { owner:(address)=>{this.showContract("Owner "+key,key,1,address);},
+                desc: (address)=>{this.showContract("Description "+key,key,4,address);}},
               (list)=>{this.updateModal(list.length==0?'Empty':'',list);});
             break;
         }
       },
-      showContract(title,key,mode,address) {
+      //------------------------------------------------------------------------------------------------
+      showContract(title,key,mode,address,error=null,success=null) {
         this.contract.title       = title;
         this.contract.state       = true;
         this.contract.message     = '';
@@ -245,7 +272,7 @@ let main = {
         this.contract.communities = false;
         this.contract.address     = address;
         this.contract.link        = this.wallet.web3.utils.isAddress(address)?this.wallet.option['network']['href']+"/address/"+address:'#';
-        this.contract.mode        = mode;
+        this.contract.mode        = this.wallet.web3&&this.wallet.isAddress()?mode:5;
 
         switch (key) {
           case 'avatar store':
@@ -261,7 +288,7 @@ let main = {
             this._resetData(["price"]);
             break;
           default:
-            this._resetData();
+            this._resetData([]);
             break;
         }
         this.$refs.refModalContract.show();
@@ -278,61 +305,60 @@ Vue.component('content-sub',{
                 <b-form-group size="sm" v-if="sub.input" :invalid-feedback="message" :valid-feedback="message" :state="state" class="mb-3">
                   <b-input-group size="sm">
                     <b-input-group-prepend>
-                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="create()"><i class="fas fa-plus"></i></b-btn>
+                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="contract(0)"><i class="fas fa-plus"></i></b-btn>
                       <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="list()"><i class="fas fa-list-ul"></i></b-btn>
                     </b-input-group-prepend>
                     <b-form-input type="text" placeholder="contract adress" v-model="address"></b-form-input>
                     <b-input-group-append>
-                      <b-btn size="sm" v-if="isLogedIn&&sub.priceMode" variant="secondary" v-on:click="edit(2)"><i class="fas fa-file-invoice-dollar"></i></b-btn>
-                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="edit(1)"><i class="fas fa-file-signature"></i></b-btn>
-                      <b-btn size="sm" v-if="!isLogedIn" variant="secondary" v-on:click="about()"><i class="fas fa-info"></i></b-btn>
+                      <b-btn size="sm" v-if="isLogedIn&&sub.btns.owner" variant="outline-danger" v-on:click="contract(1)"><i class="fas fa-exchange-alt"></i></b-btn>
+                      <b-btn size="sm" v-if="isLogedIn&&sub.btns.store" variant="outline-danger" v-on:click="contract(2)"><i class="fas fa-store"></i></b-btn>
+                      <b-btn size="sm" v-if="isLogedIn&&sub.btns.price" variant="outline-primary" v-on:click="contract(3)"><i class="fas fa-file-invoice-dollar"></i></b-btn>
+                      <b-btn size="sm" v-if="isLogedIn&&sub.btns.desc" variant="outline-primary" v-on:click="contract(4)"><i class="fas fa-file-signature"></i></b-btn>
+                      <b-btn size="sm" v-if="!isLogedIn" variant="outline-primary" v-on:click="contract(5)"><i class="fas fa-info"></i></b-btn>
                     </b-input-group-append>
                   </b-input-group>
                 </b-form-group>
               </div>`,
-      data () {
-        return {
-            wallet:navbar.wallet,
-            message:'',
-            state:true,
-            address:''
-        }
-      },
-      computed: {
-        isLogedIn: function () {
-          return this.wallet.web3&&this.wallet.isAddress();
-        }
-      },
-      methods: {
-        loginOK() {
-          return this.wallet.web3&&this.wallet.isAddress();
-        },
-        create() {
-          if(this.wallet.web3&&this.wallet.isAddress()) {
-            app.$children[0].showContract("Create "+this.sub.key,this.sub.key,0,"");
-          }
-        },
-        list() {
-          if(this.wallet.web3&&this.wallet.isAddress()) {
-            app.$children[0].showContractList(this.sub.key);
-          }
-        },
-        edit(mode) {
-          if(this.wallet.web3&&this.wallet.isAddress()) {
-            app.$children[0].showContract("Edit "+this.sub.key,this.sub.key,mode,this.address);
-          }
-        },
-        about() {
-          if(this.wallet.web3.utils.isAddress(this.address)) {
-            this.state    = true;
-            this.message  = "";
-            app.$children[0].showContract("About "+this.sub.key,this.sub.key,3,this.address);
-          } else {
-            this.state    = false;
-            this.message  = "This is a wrong address.";
-          }
-        },
+    data () {
+      return {
+          wallet:navbar.wallet,
+          message:'',
+          state:true,
+          address:''
       }
+    },
+    computed: {
+      isLogedIn: function () {
+        return this.wallet.web3&&this.wallet.isAddress();
+      }
+    },
+    methods: {
+      list() {
+        if(this.wallet.web3&&this.wallet.isAddress())
+          app.$children[0].showContractList(this.sub.key);
+      },
+      contract(mode) {
+        if(mode==0||this.wallet.web3.utils.isAddress(this.address)) {
+          this.state    = true;
+          this.message  = "";
+
+          let title = '';
+          switch (mode) {
+            case 0: title = "Create "; break;
+            case 1: title = "Owner "; break;
+            case 2: title = "Store "; break;
+            case 3: title = "Price "; break;
+            case 4: title = "Description "; break;
+            case 5: title = "Information "; break;
+          }
+
+          app.$children[0].showContract(title+this.sub.key,this.sub.key,mode,this.address,(r)=>{this.state=false;this.message=r;},(r)=>{this.state=true;this.message=r;});
+        } else {
+          this.state    = false;
+          this.message  = "This is a wrong address.";
+        }
+      }
+    }
 });
 
 Vue.component('contents',{
