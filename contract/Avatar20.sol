@@ -1,106 +1,191 @@
 pragma solidity ^0.4.24;
 
 contract ERC20Interface {
-    function balanceOf(address tokenOwner) public constant returns (uint balance);
     function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
     function transfer(address to, uint tokens) public returns (bool success);
     function transferFrom(address from, address to, uint tokens) public returns (bool success);
 }
 
-contract Avatar20 {
-    address     owner;
-    address     manager;
-    uint256     index   = 1;
+contract SafeMath {
+    function safeAdd(uint a, uint b) public pure returns (uint c) {
+        c = a + b;
+        require(c >= a);
+    }
+    function safeSub(uint a, uint b) public pure returns (uint c) {
+        require(b <= a);
+        c = a - b;
+    }
+}
 
-    constructor(address _owner) public {
-        owner   = _owner;
-        manager = msg.sender;
+contract Avatar20 is SafeMath{
+    address                     manager;
+    address                     erc20;
+    uint256                     price;
+    uint256                     index;      // for asset
+
+    uint256                     totalSupply;
+    mapping(address=>uint256)   coupons;
+
+    address                     updater;
+    mapping(address=>uint256)   ranks;
+    mapping(address=>uint256)   badgeFlags; // (1~255)
+
+    constructor(address _erc20, uint256 _price, bytes _msgPack) public {
+        manager     = msg.sender;
+        erc20       = _erc20;
+        price       = _price;
+
+        emit INFO(_msgPack);
     }
 
-    function ownerShip(address _owner) public {
-        require(msg.sender==manager);
-        owner   = _owner;
+    modifier onlyOwner() {
+        require(msg.sender==Manager(manager).owner());
+        _;
     }
 
-    event ASSET(uint256 indexed _category, uint256 indexed index, bytes);
-    function asset(uint256 _category, bytes _image) public {
-        require(msg.sender==owner);
+    // about
+    function about() constant public returns (bool, address,uint256,uint256,uint256,uint256,uint256) {
+        return (Manager(manager).copyright(),erc20,price,coupons[msg.sender],totalSupply,ranks[msg.sender],badgeFlags[msg.sender]);
+    }
+
+    // register information
+    event INFO(bytes _msgPack);
+    function info(bytes _msgPack) onlyOwner public {
+        emit INFO(_msgPack);
+    }
+
+    // register asset
+    event ASSET(uint256 indexed _category, uint256 indexed _index, bytes _img);
+    function asset(uint256 _category, bytes _image) onlyOwner public {
         emit ASSET(_category,index,_image);
-        index++;
+        index   = safeAdd(index,1);
+    }
+    event BADGE(uint8 indexed _index, string _title, bytes _img);
+    function badge(uint8 _index, string _title, bytes _image) onlyOwner public {
+        require(_index>0);
+        emit BADGE(_index,_title,_image);
+    }
+
+    // coupon
+    event COUPON(address indexed _to, uint256 _count);
+    function coupon(address _to, uint256 _count) onlyOwner public {
+        coupons[_to]    = safeAdd(coupons[_to],_count);
+        totalSupply     = safeAdd(totalSupply,_count);
+        emit COUPON(_to,_count);
+    }
+
+    // change price
+    function newPrice(uint256 _price) onlyOwner public {
+        price       = _price;
+    }
+
+    // updater
+    modifier onlyUpdater() {
+        require (msg.sender==updater);
+        _;
+    }
+    function setUpdater(address _updater) onlyOwner public {
+        updater = _updater;
+    }
+    // update ranks. (how to update ranks??)
+    function rank(address _user, uint256 _rank) onlyUpdater public {
+        ranks[_user]        = _rank;
+    }
+    // update badge (how to add badges??)
+    function badge(address _user, uint256 _badge) onlyUpdater public {
+        badgeFlags[_user]   |=_badge;
+    }
+
+    // register Avatar
+    event AVATAR (address indexed _user, uint256 _price);
+    function avatar(bytes _msgPack) payable public {
+        require(Manager(manager).copyright());
+        require(((erc20==address(0)?msg.value:ERC20Interface(erc20).allowance(msg.sender,this))==price)||(coupons[msg.sender]>0));
+
+        uint256 pay = (erc20==address(0)?msg.value:ERC20Interface(erc20).allowance(msg.sender,this));
+
+        if(price>0) {
+            if(pay==0&&(coupons[msg.sender]>0)) {
+                coupons[msg.sender] = safeSub(coupons[msg.sender],1);
+                totalSupply         = safeSub(totalSupply,1);
+            } else if(erc20!=address(0)) {
+                ERC20Interface(erc20).transferFrom(msg.sender,Manager(manager).owner(),price);
+            }
+        }
+
+        Manager(manager).avatar(msg.sender,_msgPack);
+        emit AVATAR(msg.sender,pay);
     }
 }
 
 contract Manager {
-    address     owner;
+    struct _info {
+        address     owner;
+        bool        copyright;
+    }
+    address                     master;
+    mapping(address=>_info)     infos;
 
     constructor() public {
-        owner = msg.sender;
+        master = msg.sender;
     }
 
-    struct _data {
-        uint8       status; // 1 = disable, 2 = enable;
-        address     owner;
-        address     erc20;
-        uint256     price;
+    modifier onlyMaster() {
+        require(msg.sender==master);
+        _;
     }
-
-    mapping(address=>_data)     stores;
-
-    modifier onlyStoreOwner(address _store) {
-        require(stores[_store].status>0&&stores[_store].owner==msg.sender);
+    modifier onlyOwner(address _contract) {
+        require(msg.sender==infos[_contract].owner);
         _;
     }
 
-    event TOKEN(address indexed _store, address indexed _erc20);
-    function create(address _erc20, uint256 _price, bytes _msgPack) public {
-        address temp    = new Avatar20(msg.sender);
-        stores[temp]    = _data(2,msg.sender,_erc20,_price);
-        emit TOKEN(temp,_erc20);
-        emit STORE(temp,_msgPack);
-        emit OWNER(temp,msg.sender,address(0));
-    }
-    function toggle(address _store) public {
-        require(stores[_store].status>0);
-        require(msg.sender==owner);
-        stores[_store].status    = stores[_store].status==1?2:1;
-    }
-    function about(address _store) constant public returns (uint8, address, address,uint256) {
-        return (stores[_store].status,stores[_store].owner,stores[_store].erc20,stores[_store].price);
+    function newMaster(address _next) onlyMaster public {
+        require(_next!=address(0)&&_next!=address(this)&&_next!=master);
+        master = _next;
     }
 
-    function price(address _store, uint256 _price) onlyStoreOwner(_store) public {
-        stores[_store].price    = _price;
+    function owner() constant public returns (address) {
+        return infos[msg.sender].owner;
     }
-    event OWNER(address indexed _store, address indexed _to, address indexed _from);
-    function ownerShip(address _store, address _owner) public {
-        require(stores[_store].status==2);
-        require(stores[_store].owner==msg.sender);
-        require(address(0)!=_owner);
-        stores[_store].owner=_owner;
-        Avatar20(_store).ownerShip(_owner);
-        emit OWNER(_store,_owner,msg.sender);
+    function copyright() constant public returns (bool) {
+        return infos[msg.sender].copyright;
     }
-    event STORE(address indexed _store, bytes _msgPack);
-    function store(address _store, bytes _msgPack) onlyStoreOwner(_store) public {
-        emit STORE(_store,_msgPack);
+
+    // create Shop
+    event TOKEN(address indexed _contract, address indexed _erc20);
+    function store(address _erc20, uint256 _price, bytes _msgPack) public {
+        address temp            = new Avatar20(_erc20,_price,_msgPack);
+        infos[temp].owner       = msg.sender;
+        infos[temp].copyright   = true;
+        emit OWNER(temp,msg.sender,address(0));
+        emit TOKEN(temp,_erc20);
     }
-    event SCRIPT(address indexed _store, bytes _script);
-    function custom(address _store, bytes _script) onlyStoreOwner(_store) public {
-        emit SCRIPT(_store,_script);
+
+    // change copyright
+    function enable(address _contract, bool _enable) onlyMaster public {
+        infos[_contract].copyright  = _enable;
     }
-    function script(bytes _script) public {
-        require(msg.sender==owner);
+
+    // change Owner
+    event OWNER(address indexed _contract, address indexed _to, address indexed _from);
+    function newOwner(address _contract, address _next) onlyOwner(_contract) public {
+        emit OWNER(_contract,_next,infos[_contract].owner);
+        infos[_contract].owner  = _next;
+    }
+
+    // register Script
+    event SCRIPT(address indexed _contract, bytes _script);
+    function custom(address _contract, bytes _script) onlyOwner(_contract) public {
+        emit SCRIPT(_contract,_script);
+    }
+    function script(bytes _script) onlyMaster public {
         emit SCRIPT(address(0),_script);
     }
 
-    event AVATAR (address indexed _user, address indexed _store, bytes _msgPack);
-    function avatar(address _store, bytes _msgPack) payable public {
-        require(stores[_store].status==2);
-        require((stores[_store].erc20==address(0)?msg.value:ERC20Interface(stores[_store].erc20).allowance(msg.sender,this))==stores[_store].price);
-
-        if(stores[_store].erc20!=address(0)&&stores[_store].price>0)
-            ERC20Interface(stores[_store].erc20).transferFrom(msg.sender,stores[_store].owner,stores[_store].price);
-
-        emit AVATAR(msg.sender,_store,_msgPack);
+    // register Avatar
+    event AVATAR (address indexed _user, address indexed _contract, bytes _msgPack);    //
+    function avatar(address _user, bytes _msgPack) public {
+        require(infos[msg.sender].copyright&&infos[msg.sender].owner!=address(0));
+        emit AVATAR(_user,msg.sender,_msgPack);
     }
 }

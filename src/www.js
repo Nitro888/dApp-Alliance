@@ -69,10 +69,10 @@ let main = {
           </b-input-group>
         </b-form-group>
 
-        <b-form-group size="sm" label="Owner" label-for="owner" v-if="contract.tab!=0">
+        <b-form-group size="sm" label="Owner" label-for="owner" invalid-feedback="This is a wrong address." :state="isAddressOwner" v-if="contract.tab!=0">
           <b-form-input size="sm" type="text" id="owner" placeholder="address of contract owner" v-model="data.owner" :readonly="contract.tab!=1"></b-form-input>
         </b-form-group>
-        <b-form-group size="sm" label="Store" label-for="store" v-if="isPack">
+        <b-form-group size="sm" label="Store" label-for="store" invalid-feedback="This is a wrong address." :state="isAddressStore" v-if="isPack">
           <b-form-input size="sm" type="text" id="store" placeholder="address of pack store" v-model="data.store" :readonly="contract.tab!=2"></b-form-input>
         </b-form-group>
 
@@ -83,7 +83,7 @@ let main = {
           <b-form-textarea size="sm" id="desc" placeholder="enter description" v-model="json.desc" :readonly="!(contract.tab==0||contract.tab==4)"></b-form-textarea>
         </b-form-group>
 
-        <b-form-group size="sm" label="Token Address" label-for="token" v-if="showErc20">
+        <b-form-group size="sm" label="Token Address" label-for="token" invalid-feedback="This is a wrong address." :state="isAddressErc20" v-if="showErc20">
           <b-form-input size="sm" type="text" id="token" placeholder="erc20 token address or '0x0' for ethereum" v-model="data.erc20" :readonly="contract.tab!=0"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Price" label-for="price" v-if="showPrice">
@@ -197,6 +197,15 @@ let main = {
       isLogedIn: function () {
         return this.wallet.web3&&this.wallet.isAddress();
       },
+      isAddressOwner: function () {
+        return this.data.owner==''||this.wallet.web3.utils.isAddress(this.data.owner);
+      },
+      isAddressStore: function () {
+        return this.data.store==''||this.wallet.web3.utils.isAddress(this.data.store);
+      },
+      isAddressErc20: function () {
+        return this.data.erc20==''||this.wallet.web3.utils.isAddress(this.data.erc20);
+      },
       isStore : function () {
         return this.contract.key=='store';
       },
@@ -248,6 +257,13 @@ let main = {
         for (let field in this.data)
           this.data[field] = '';
       },
+      _json(obj)       {
+        let json = {};
+        for (var key in obj)
+          if(obj[key]!='')
+            json[key] = obj[key];
+        return json;
+      },
       _searchOwner(contract,callback){
         let myAddress = this.wallet.web3.utils.padLeft(this.wallet.address(),64);
         let topics    = 'topic0='+contract.topic0+'&topic2='+myAddress+'&topic3='+myAddress+'&topic2_3_opr=or';
@@ -274,11 +290,19 @@ let main = {
       },
       _confirmContract() {
         if(this.wallet.web3&&this.wallet.isAddress()) {
+          let isCreate  = this.contract.tab==0; // 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
+          let contract  = this.contract.key;    // avatar,store,pack,creator
+          let password  = this.contract.password;
+          let json      = this._json(this.json);
+          let data      = this._json(this.data);
 
+          // todo : create & edit
+
+
+          console.log(this.contract);
+          console.log(json);
+          console.log(data);
         }
-        console.log(this.contract);
-        console.log(this.json);
-        console.log(this.data);
       },
       _sendTx(address,password,value,data) {
         if(data!=null)
@@ -296,6 +320,7 @@ let main = {
             contract  = {address:sMgr.address,topic0:sMgr.abi[7]['signature'],key:key};
             break;
           case 'pack':
+            //contract  = {address:sMgr.address,topic0:sMgr.abi[7]['signature'],key:key}; // todo
             break;
           case 'creator':
             contract  = {address:sMgr.address,topic0:sMgr.abi[6]['signature'],key:key};
@@ -329,7 +354,7 @@ Vue.component('content-sub',{
     template:`<div>
                 <h5>{{sub.title}}</h5>
                 <p><span v-html="sub.desc"></span></p>
-                <b-form-group size="sm" v-if="sub.input" :invalid-feedback="message" :valid-feedback="message" :state="state" class="mb-3">
+                <b-form-group size="sm" v-if="sub.input" invalid-feedback="This is a wrong address." :state="isAddress" class="mb-3">
                   <b-input-group size="sm">
                     <b-input-group-prepend>
                       <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="create()"><i class="fas fa-plus"></i></b-btn>
@@ -345,15 +370,16 @@ Vue.component('content-sub',{
     data () {
       return {
           wallet:navbar.wallet,
-          message:'',
-          state:true,
           address:''
       }
     },
     computed: {
       isLogedIn: function () {
         return this.wallet.web3&&this.wallet.isAddress();
-      }
+      },
+      isAddress: function () {
+        return this.address==''||this.wallet.web3.utils.isAddress(this.address);
+      },
     },
     methods: {
       list() {
@@ -361,17 +387,12 @@ Vue.component('content-sub',{
           app.$children[0].showContractList(this.sub.key);
       },
       create(address='') {
-        this.state    = true;
-        this.message  = "";
+        this.address  = "";
         app.$children[0].showContract(this.sub.key,address,(r)=>{this.state=false;this.message=r;},(r)=>{this.state=true;this.message=r;});
       },
       contract() {
         if(this.wallet.web3.utils.isAddress(this.address))
           this.create(this.address);
-        else {
-          this.state    = false;
-          this.message  = "This is a wrong address.";
-        }
       }
     }
 });
