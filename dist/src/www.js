@@ -7,6 +7,7 @@ const sMgr  = require('./abi/store.js');
 navbar.wallet.pushContract(sMgr.manager,sMgr.address);
 
 //console.log(aMgr.manager);
+//console.log(aMgr.avatar);
 //console.log(sMgr.manager);
 
 let main = {
@@ -53,10 +54,10 @@ let main = {
 
         <b-nav pills justified tabs class="mb-2">
           <b-nav-item :active="contract.tab==0" :disabled="contract.address!=''||!isLogedIn" v-on:click="contract.tab=0;"><i class="fas fa-plus"></i></b-nav-item>
-          <b-nav-item :active="contract.tab==1" :disabled="contract.address==''||!isLogedIn" v-on:click="contract.tab=1;"><i class="fas fa-exchange-alt"></i></b-nav-item>
-          <b-nav-item :active="contract.tab==2" :disabled="contract.address==''||!isLogedIn||!isPack" v-on:click="contract.tab=2;"><i class="fas fa-store"></i></b-nav-item>
-          <b-nav-item :active="contract.tab==3" :disabled="contract.address==''||!isLogedIn||isStore||isCreator" v-on:click="contract.tab=3;"><i class="fas fa-file-invoice-dollar"></i></b-nav-item>
-          <b-nav-item :active="contract.tab==4" :disabled="contract.address==''||!isLogedIn" v-on:click="contract.tab=4;"><i class="fas fa-file-signature"></i></b-nav-item>
+          <b-nav-item :active="contract.tab==1" :disabled="contract.address==''||!isOwner" v-on:click="contract.tab=1;"><i class="fas fa-exchange-alt"></i></b-nav-item>
+          <b-nav-item :active="contract.tab==2" :disabled="contract.address==''||!isOwner||!isPack" v-on:click="contract.tab=2;"><i class="fas fa-store"></i></b-nav-item>
+          <b-nav-item :active="contract.tab==3" :disabled="contract.address==''||!isOwner||isStore||isCreator" v-on:click="contract.tab=3;"><i class="fas fa-file-invoice-dollar"></i></b-nav-item>
+          <b-nav-item :active="contract.tab==4" :disabled="contract.address==''||!isOwner" v-on:click="contract.tab=4;"><i class="fas fa-file-signature"></i></b-nav-item>
           <b-nav-item :active="contract.tab==5" :disabled="contract.address==''" v-on:click="contract.tab=5;"><i class="fas fa-info"></i></b-nav-item>
         </b-nav>
 
@@ -96,13 +97,19 @@ let main = {
           <b-form-input size="sm" type="number" id="price" placeholder="price of avatar making" v-model="data.price" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Stamp" label-for="stamp" v-if="showStamp">
-          <b-form-input size="sm" type="number" id="stamp" min="0" max="255" placeholder="stamp for avatar mileage (max:255)" v-model="data.stamp" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
+          <b-form-input size="sm" type="number" id="stamp" min="0" max="255" placeholder="stamps for 1 free coupon (0~255, 0 is not free coupon)" v-model="data.stamp" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Fee" label-for="fee" v-if="showFee">
-          <b-form-input size="sm" type="number" id="fee" min="0" max="100" placeholder="avatar alliance fee (0%~100%)" v-model="data.fee" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
+          <b-input-group size="sm">
+            <b-form-input size="sm" type="number" id="fee" min="0" max="100" placeholder="avatar alliance fee (0~100)" v-model="data.fee" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
+            <b-input-group-text slot="append"><i class="fas fa-percent"></i></b-input-group-text>
+          </b-input-group>
         </b-form-group>
         <b-form-group size="sm" label="Share" label-for="share" v-if="showShare">
-          <b-form-input size="sm" type="number" id="share" min="0" max="100" placeholder="share with store and creator (0%~100%)" v-model="data.share" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
+          <b-input-group size="sm">
+            <b-form-input size="sm" type="number" id="share" min="0" max="100" placeholder="share with store and creator (0~100)" v-model="data.share" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
+            <b-input-group-text slot="append"><i class="fas fa-percent"></i></b-input-group-text>
+          </b-input-group>
         </b-form-group>
         <b-form-group size="sm" label="Share Start" label-for="shareStart" v-if="showShareStart">
           <b-form-input size="sm" type="number" id="shareStart" placeholder="share start income" v-model="data.shareStart" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
@@ -208,6 +215,9 @@ let main = {
     computed: {
       isLogedIn: function () {
         return this.wallet.web3&&this.wallet.isAddress();
+      },
+      isOwner: function () {
+        return this.wallet.web3&&this.wallet.isAddress()&&this.data.owner.toLowerCase()==this.wallet.address().toLowerCase();
       },
       isAddressOwner: function () {
         return this.data.owner==''||this.wallet.web3.utils.isAddress(this.data.owner);
@@ -326,15 +336,11 @@ let main = {
             case 'creator': address   = sMgr.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
           }
 
-          // /console.log(isCreate,contract,password);
-          //console.log(this.contract);
-          //console.log(json);
           //console.log(data);
-          console.log(data);
-          console.log(this.wallet.contract[address].c.methods);
+          //console.log(this.wallet.contract[address].c.methods);
 
-          //if(data!=null)
-            //this._sendTx(address,this.contract.password,0,data);
+          if(data!=null)
+            this._sendTx(address,this.contract.password,0,data);
         }
       },
 
@@ -342,12 +348,12 @@ let main = {
         let result = null;
         switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
           case 0:
-            result  = this.wallet.contract[address].c.methods.store(data.alliance,
+            result  = this.wallet.contract[address].c.methods.store(this.wallet.web3.utils.bytesToHex(msgpack.encode(json)),
+                                                                    data.alliance,
                                                                     data.erc20,
-                                                                    data.price?data.price:0,
+                                                                    data.price?this.wallet.web3.utils.toWei(data.price,'ether'):0,
                                                                     data.share?data.share:0,
-                                                                    data.stamp?data.stamp:0,
-                                                                    this.wallet.web3.utils.bytesToHex(msgpack.encode(json))).encodeABI();
+                                                                    data.stamp?data.stamp:0).encodeABI();
             break;
         }
         return result;
@@ -387,7 +393,7 @@ let main = {
       //------------------------------------------------------------------------------------------------
       _sendTx(address,password,value,data) {
         if(data!=null)
-          this.wallet.sendTx(address,password,value,data,(e)=>{this.common.state=false;this.common.message=e;},(h)=>{this.common.state=true;this.common.message="Tx:"+h;},(r)=>{this.common.state=true;this.common.message="Success";});
+          this.wallet.sendTx(address,password,value,data,(e)=>{this.contract.state=false;this.contract.message=e;},(h)=>{this.contract.state=true;this.contract.message="Tx:"+h;},(r)=>{this.contract.state=true;this.contract.message="Success";});
       },
       //------------------------------------------------------------------------------------------------
       showContractList(key) {
@@ -412,7 +418,7 @@ let main = {
       },
       //------------------------------------------------------------------------------------------------
       showContract(key,address,error=null,success=null) {
-        this.contract.title       = address==''?"Create":"Contract";
+        this.contract.title       = (address==''?"Create ":"Contract ")+key;
         this.contract.address     = address;
         this.contract.link        = this.wallet.web3.utils.isAddress(address)?this.wallet.option['network']['href']+"/address/"+address:'#';
         this.contract.communities = false;
@@ -424,7 +430,70 @@ let main = {
 
         this._resetData();
 
-        this.$refs.refModalContract.show();
+        if(this.wallet.web3&&this.wallet.web3.utils.isAddress(address)) {
+          switch (key) {
+            case 'avatar':  this.showAvatar(key,address,error,success); break;
+            case 'store':   this.showEditStore(key,address,error,success); break;
+            case 'pack':    this.showPack(key,address,error,success); break;
+            case 'creator': this.showCreator(key,address,error,success); break;
+          }
+        } else if(address=='')
+          this.$refs.refModalContract.show();
+      },
+      showAvatar(key,address,error=null,success=null) {
+        this.wallet.contract[aMgr.address].c.methods.about(address).call((e,r)=>{
+          if(e==null){
+            let abi       = aMgr.avatar[12];
+            let signature = this.wallet.web3.eth.abi.encodeEventSignature(abi);
+            let topics    = 'topic0='+signature;
+            this.wallet.logs(address,topics,(data)=>{
+              if(data.length>0) {
+                let temp    = this.wallet.web3.eth.abi.decodeLog(abi['inputs'],data[data.length-1].data,data[data.length-1].topics);
+                let json    = msgpack.decode(this.wallet.web3.utils.hexToBytes(temp['_msgPack']));
+
+                this.data.owner = r[0];
+                this.data.erc20 = r[1];
+                this.data.price = this.wallet.web3.utils.fromWei(r[2].toString(),'ether');
+                this.data.share = parseInt(r[3]);
+                this.data.stamp = parseInt(r[4]);
+
+                for (var key in json)
+                  if(json[key]!='')
+                    this.json[key] = json[key];
+
+                //console.log(r);
+                //console.log(json);
+
+                if(!success)
+                  this.$refs.refModalContract.show();
+              }
+            });
+          }
+        });
+      },
+      showEditStore(key,address,error=null,success=null) {
+        this.wallet.contract[sMgr.address].c.methods.about(address).call((e,r)=>{
+          console.log(r);
+          if(e==null){
+
+          }
+        });
+      },
+      showPack(key,address,error=null,success=null) {
+        this.wallet.contract[sMgr.address].c.methods.about(address).call((e,r)=>{
+          console.log(r);
+          if(e==null){
+
+          }
+        });
+      },
+      showCreator(key,address,error=null,success=null) {
+        this.wallet.contract[sMgr.address].c.methods.about(address).call((e,r)=>{
+          console.log(r);
+          if(e==null){
+
+          }
+        });
       },
       //------------------------------------------------------------------------------------------------
     }
@@ -438,12 +507,12 @@ Vue.component('content-sub',{
                 <b-form-group size="sm" v-if="sub.input" invalid-feedback="This is a wrong address." :state="isAddress" class="mb-3">
                   <b-input-group size="sm">
                     <b-input-group-prepend>
-                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="create()"><i class="fas fa-plus"></i></b-btn>
+                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="contract()"><i class="fas fa-plus"></i></b-btn>
                       <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="list()"><i class="fas fa-list-ul"></i></b-btn>
                     </b-input-group-prepend>
                     <b-form-input type="text" placeholder="contract adress" v-model="address"></b-form-input>
                     <b-input-group-append>
-                      <b-btn size="sm" variant="outline-primary" v-on:click="contract()"><i class="fas fa-info"></i></b-btn>
+                      <b-btn size="sm" variant="outline-primary" v-on:click="about()"><i class="fas fa-info"></i></b-btn>
                     </b-input-group-append>
                   </b-input-group>
                 </b-form-group>
@@ -467,13 +536,13 @@ Vue.component('content-sub',{
         if(this.wallet.web3&&this.wallet.isAddress())
           app.$children[0].showContractList(this.sub.key);
       },
-      create(address='') {
-        this.address  = "";
-        app.$children[0].showContract(this.sub.key,address,(r)=>{this.state=false;this.message=r;},(r)=>{this.state=true;this.message=r;});
+      contract(address='') {
+        //this.address  = "";
+        app.$children[0].showContract(this.sub.key,address,(r)=>{this.state=false;this.message=r;}/*,(r)=>{this.state=true;this.message=r;}*/);
       },
-      contract() {
+      about() {
         if(this.wallet.web3.utils.isAddress(this.address))
-          this.create(this.address);
+          this.contract(this.address);
       }
     }
 });

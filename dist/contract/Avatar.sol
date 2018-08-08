@@ -49,7 +49,7 @@ contract Manager is SafeMath {
 
         address                         erc20;
         uint256                         price;
-        uint256                         fee;
+        uint256                         share;
 
         uint256                         totalSupply;
         uint8                           stamp;
@@ -97,15 +97,15 @@ contract Manager is SafeMath {
 
     // create Shop
     event TOKEN(address indexed _contract, address indexed _erc20);
-    function store(address _root, address _erc20, uint256 _price, uint8 _fee, uint8 _stamp, bytes _msgPack) public {
+    function store(bytes _msgPack, address _root, address _erc20, uint256 _price, uint8 _share, uint8 _stamp) public {
         require(_root==address(0)||(copyright(_root)&&avatars[_root].root==address(0)));
-        require(_fee<101);
+        require(_share<101);
         address temp            = new Avatar(_msgPack);
         address erc20           = _root==address(0)?_erc20:avatars[_root].erc20;
         uint256 price           = _root==address(0)?_price:0;
-        uint256 fee             = _root==address(0)?(_fee>0?safeDiv(safeMul(_price,_fee),100):0):0;
+        uint256 share           = _root==address(0)?(_share>0?safeDiv(safeMul(_price,_share),100):0):0;
         uint8 stamp             = _root==address(0)?_stamp:0;
-        avatars[temp]           = _avatar(msg.sender,_root,true,erc20,price,fee,0,stamp);
+        avatars[temp]           = _avatar(msg.sender,_root,true,erc20,price,share,0,stamp);
         emit OWNER(temp,msg.sender,address(0));
         emit TOKEN(temp,_erc20);
     }
@@ -118,12 +118,12 @@ contract Manager is SafeMath {
     function copyright(address _contract) constant public returns (bool) {
         return avatars[_contract].root==address(0)?avatars[_contract].copyright:avatars[avatars[_contract].root].copyright;
     }
-    function about(address _contract) constant public returns (bool, address, uint256, uint256, uint8, uint256) {
+    function about(address _contract) constant public returns (address, address, uint256, uint256, uint8, uint256) {
         address _root = avatars[_contract].root;
-        return (copyright(_contract),
+        return (copyright(_contract)?avatars[_contract].owner:address(0),
                 _root==address(0)?avatars[_contract].erc20:avatars[_root].erc20,
                 _root==address(0)?avatars[_contract].price:avatars[_root].price,
-                _root==address(0)?avatars[_contract].fee:avatars[_root].fee,
+                _root==address(0)?avatars[_contract].share:avatars[_root].share,
                 _root==address(0)?avatars[_contract].stamp:avatars[_root].stamp,
                 _root==address(0)?avatars[_contract].totalSupply:avatars[_root].totalSupply);
     }
@@ -192,8 +192,8 @@ contract Manager is SafeMath {
                 if(_contract==_root)
                     transfer(avatars[_root].erc20,msg.sender,avatars[_root].owner,_price);
                 else {
-                    transfer(avatars[_root].erc20,msg.sender,avatars[_root].owner,avatars[_root].fee);
-                    transfer(avatars[_root].erc20,msg.sender,avatars[_contract].owner,safeSub(_price,avatars[_root].fee));
+                    transfer(avatars[_root].erc20,msg.sender,avatars[_root].owner,avatars[_root].share);
+                    transfer(avatars[_root].erc20,msg.sender,avatars[_contract].owner,safeSub(_price,avatars[_root].share));
                 }
             }
         }
