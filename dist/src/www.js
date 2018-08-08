@@ -1,13 +1,13 @@
 let navbar  = require('./navbar.js');
 
-const aMgr  = require('./abi/avatar20/manager.js');
-navbar.wallet.pushContract(aMgr.abi,aMgr.address);
+const aMgr  = require('./abi/avatar.js');
+navbar.wallet.pushContract(aMgr.manager,aMgr.address);
 
-const sMgr  = require('./abi/store/manager.js');
-navbar.wallet.pushContract(sMgr.abi,sMgr.address);
+const sMgr  = require('./abi/store.js');
+navbar.wallet.pushContract(sMgr.manager,sMgr.address);
 
-//console.log(aMgr.abi);
-//console.log(sMgr.abi);
+//console.log(aMgr.manager);
+//console.log(sMgr.manager);
 
 let main = {
   template: `
@@ -51,7 +51,7 @@ let main = {
 
       <b-modal ref="refModalContract" :title="contract.title" header-bg-variant="dark" header-text-variant="light" hide-footer>
 
-        <b-nav pills justified tabs>
+        <b-nav pills justified tabs class="mb-2">
           <b-nav-item :active="contract.tab==0" :disabled="contract.address!=''||!isLogedIn" v-on:click="contract.tab=0;"><i class="fas fa-plus"></i></b-nav-item>
           <b-nav-item :active="contract.tab==1" :disabled="contract.address==''||!isLogedIn" v-on:click="contract.tab=1;"><i class="fas fa-exchange-alt"></i></b-nav-item>
           <b-nav-item :active="contract.tab==2" :disabled="contract.address==''||!isLogedIn||!isPack" v-on:click="contract.tab=2;"><i class="fas fa-store"></i></b-nav-item>
@@ -73,7 +73,10 @@ let main = {
           <b-form-input size="sm" type="text" id="owner" placeholder="address of contract owner" v-model="data.owner" :readonly="contract.tab!=1"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Store" label-for="store" invalid-feedback="This is a wrong address." :state="isAddressStore" v-if="isPack">
-          <b-form-input size="sm" type="text" id="store" placeholder="address of pack store" v-model="data.store" :readonly="contract.tab!=2"></b-form-input>
+          <b-form-input size="sm" type="text" id="store" placeholder="address of store" v-model="data.store" :readonly="contract.tab!=2"></b-form-input>
+        </b-form-group>
+        <b-form-group size="sm" label="Creator" label-for="creator" invalid-feedback="This is a wrong address." :state="isAddressCreator" v-if="isPack">
+          <b-form-input size="sm" type="text" id="store" placeholder="address of creator" v-model="data.creator" :readonly="contract.tab!=2"></b-form-input>
         </b-form-group>
 
         <b-form-group size="sm" label="Name" label-for="name">
@@ -83,14 +86,23 @@ let main = {
           <b-form-textarea size="sm" id="desc" placeholder="enter description" v-model="json.desc" :readonly="!(contract.tab==0||contract.tab==4)"></b-form-textarea>
         </b-form-group>
 
+        <b-form-group size="sm" label="Avatar Alliance" label-for="alliance" invalid-feedback="This is a wrong address." :state="isAddressAlliance" v-if="showAlliance">
+          <b-form-input size="sm" type="text" id="alliance" placeholder="avatar alliance address or '0x0' for root" v-model="data.alliance" :readonly="contract.tab!=0"></b-form-input>
+        </b-form-group>
         <b-form-group size="sm" label="Token Address" label-for="token" invalid-feedback="This is a wrong address." :state="isAddressErc20" v-if="showErc20">
           <b-form-input size="sm" type="text" id="token" placeholder="erc20 token address or '0x0' for ethereum" v-model="data.erc20" :readonly="contract.tab!=0"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Price" label-for="price" v-if="showPrice">
           <b-form-input size="sm" type="number" id="price" placeholder="price of avatar making" v-model="data.price" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
         </b-form-group>
+        <b-form-group size="sm" label="Stamp" label-for="stamp" v-if="showStamp">
+          <b-form-input size="sm" type="number" id="stamp" min="0" max="255" placeholder="stamp for avatar mileage (max:255)" v-model="data.stamp" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
+        </b-form-group>
+        <b-form-group size="sm" label="Fee" label-for="fee" v-if="showFee">
+          <b-form-input size="sm" type="number" id="fee" min="0" max="100" placeholder="avatar alliance fee (0%~100%)" v-model="data.fee" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
+        </b-form-group>
         <b-form-group size="sm" label="Share" label-for="share" v-if="showShare">
-          <b-form-input size="sm" type="number" id="share" placeholder="share with store and creator (0%~100%)" v-model="data.share" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
+          <b-form-input size="sm" type="number" id="share" min="0" max="100" placeholder="share with store and creator (0%~100%)" v-model="data.share" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
         </b-form-group>
         <b-form-group size="sm" label="Share Start" label-for="shareStart" v-if="showShareStart">
           <b-form-input size="sm" type="number" id="shareStart" placeholder="share start income" v-model="data.shareStart" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
@@ -150,7 +162,7 @@ let main = {
         ],
 
         json:{title:'',desc:''},
-        data:{owner:'',store:'',erc20:'',price:'',shareStart:'',share:''},
+        data:{owner:'',creator:'',store:'',alliance:'',erc20:'',price:'',shareStart:'',share:'',fee:'',stamp:''},
 
         contents:[
           {left:false,title:"WALLET",image:'c0.jpg',
@@ -203,6 +215,12 @@ let main = {
       isAddressStore: function () {
         return this.data.store==''||this.wallet.web3.utils.isAddress(this.data.store);
       },
+      isAddressCreator: function () {
+        return this.data.creator==''||this.wallet.web3.utils.isAddress(this.data.creator);
+      },
+      isAddressAlliance: function () {
+        return this.data.alliance==''||this.wallet.web3.utils.isAddress(this.data.alliance);
+      },
       isAddressErc20: function () {
         return this.data.erc20==''||this.wallet.web3.utils.isAddress(this.data.erc20);
       },
@@ -215,10 +233,19 @@ let main = {
       isCreator : function () {
         return this.contract.key=='creator';
       },
+      showAlliance : function () {
+        return this.contract.key=='avatar';
+      },
       showErc20 : function () {
         return this.contract.key=='avatar'||this.contract.key=='store';
       },
       showPrice : function () {
+        return this.contract.key=='avatar';
+      },
+      showStamp : function () {
+        return this.contract.key=='avatar';
+      },
+      showFee : function () {
         return this.contract.key=='avatar';
       },
       showShare : function () {
@@ -290,20 +317,74 @@ let main = {
       },
       _confirmContract() {
         if(this.wallet.web3&&this.wallet.isAddress()) {
-          let isCreate  = this.contract.tab==0; // 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
-          let contract  = this.contract.key;    // avatar,store,pack,creator
-          let password  = this.contract.password;
-          let json      = this._json(this.json);
-          let data      = this._json(this.data);
+          let address   = '';
+          let data      = null;
+          switch (this.contract.key) {
+            case 'avatar':  address   = aMgr.address; data = this._avatar(address,this._json(this.json),this._json(this.data)); break;
+            case 'store':   address   = sMgr.address; data = this._store(address,this._json(this.json),this._json(this.data));  break;
+            case 'pack':    address   = sMgr.address; data = this._pack(address,this._json(this.json),this._json(this.data));   break;
+            case 'creator': address   = sMgr.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
+          }
 
-          // todo : create & edit
-
-
-          console.log(this.contract);
-          console.log(json);
+          // /console.log(isCreate,contract,password);
+          //console.log(this.contract);
+          //console.log(json);
+          //console.log(data);
           console.log(data);
+          console.log(this.wallet.contract[address].c.methods);
+
+          //if(data!=null)
+            //this._sendTx(address,this.contract.password,0,data);
         }
       },
+
+      _avatar(address,json,data){
+        let result = null;
+        switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
+          case 0:
+            result  = this.wallet.contract[address].c.methods.store(data.alliance,
+                                                                    data.erc20,
+                                                                    data.price?data.price:0,
+                                                                    data.share?data.share:0,
+                                                                    data.stamp?data.stamp:0,
+                                                                    this.wallet.web3.utils.bytesToHex(msgpack.encode(json))).encodeABI();
+            break;
+        }
+        return result;
+      },
+      _store(address,json,data){
+        let result = null;
+        switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
+          case 0:
+            result  = this.wallet.contract[address].c.methods.store(this.wallet.web3.utils.bytesToHex(msgpack.encode(json)),
+                                                                    data.erc20).encodeABI();
+            break;
+        }
+        return result;
+      },
+      _pack(address,json,data){
+        let result = null;
+        switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
+          case 0:
+            result  = this.wallet.contract[address].c.methods.pack( this.wallet.web3.utils.bytesToHex(msgpack.encode(json)),
+                                                                    data.creator,
+                                                                    data.store,
+                                                                    data.share?data.share:0,
+                                                                    data.shareStart?data.shareStart:0).encodeABI();
+            break;
+        }
+        return result;
+      },
+      _creator(address,json,data){
+        let result = null;
+        switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
+          case 0:
+            result = this.wallet.contract[address].c.methods.creator(this.wallet.web3.utils.bytesToHex(msgpack.encode(json))).encodeABI();
+            break;
+        }
+        return result;
+      },
+      //------------------------------------------------------------------------------------------------
       _sendTx(address,password,value,data) {
         if(data!=null)
           this.wallet.sendTx(address,password,value,data,(e)=>{this.common.state=false;this.common.message=e;},(h)=>{this.common.state=true;this.common.message="Tx:"+h;},(r)=>{this.common.state=true;this.common.message="Success";});
@@ -314,16 +395,16 @@ let main = {
         let contract = {address:'',topic0:'',key:key};
         switch (key) {
           case 'avatar':
-            contract  = {address:aMgr.address,topic0:aMgr.abi[11]['signature'],key:key};
+            contract  = {address:aMgr.address,topic0:aMgr.manager[22]['signature'],key:key};
             break;
           case 'store':
-            contract  = {address:sMgr.address,topic0:sMgr.abi[7]['signature'],key:key};
+            contract  = {address:sMgr.address,topic0:sMgr.manager[13]['signature'],key:key};
             break;
           case 'pack':
-            //contract  = {address:sMgr.address,topic0:sMgr.abi[7]['signature'],key:key}; // todo
+            contract  = {address:sMgr.address,topic0:sMgr.manager[14]['signature'],key:key};
             break;
           case 'creator':
-            contract  = {address:sMgr.address,topic0:sMgr.abi[6]['signature'],key:key};
+            contract  = {address:sMgr.address,topic0:sMgr.manager[12]['signature'],key:key};
             break;
         }
         if(contract.address!='')
@@ -430,7 +511,7 @@ Vue.component('contents',{
         CREATOR:sMgr.address,
       },
       github:{
-        WALLET:'https://github.com/Nitro888/wallet.nitro888.com',
+        WALLET:'https://github.com/Nitro888/nitro888.github.io',
         AVATAR:'https://github.com/Nitro888/avatar.nitro888.com',
         STORE:'https://github.com/Nitro888/toonist.nitro888.com',
         CREATOR:'https://github.com/Nitro888/toonist.nitro888.com',

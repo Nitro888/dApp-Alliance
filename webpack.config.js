@@ -7,7 +7,7 @@ module.exports = {
     //app : './src/app.js',
     //navbar : './src/navbar.js',
     //carousel: './src/carousel.js',
-    www: './src/www.js',
+    www: './dist/src/www.js',
   },
   output: {
     filename: '[name].min.js',
