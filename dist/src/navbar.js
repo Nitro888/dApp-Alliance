@@ -1,4 +1,5 @@
-let wallet = require('./wallet.js');
+let wallet  = require('./wallet.js');
+let avatar  = require('./avatar/view.js');
 
 const navbar = {
   template: `
@@ -17,6 +18,7 @@ const navbar = {
             <b-dropdown-divider></b-dropdown-divider>
             <b-dropdown-item v-on:click="_logout()"><i class="fas fa-sign-out-alt"></i> Logout</b-dropdown-item>
           </b-nav-item-dropdown>
+          <div v-if="logedin" id="avatar" style="height:35px;width:35px;background-color:gray;border-radius:50%;overflow:hidden;"></div>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
@@ -87,6 +89,7 @@ const navbar = {
   data: function () {
     return {
       logedin       : false,
+      avatar        : false,
       tokenDefault  : '<i class="fas fa-coins"></i>',
       tokenList     : [],
 
@@ -127,6 +130,11 @@ const navbar = {
       else
         for(let i = 0 ; i < this.tokenList.length ; i++ )
           this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
+
+      if(!this.avatar) {
+        avatar.view.load('avatar',wallet.address());
+        this.avatar = true;
+      }
     },
     _createOK() {
       if((this.create.pw0==this.create.pw1)&&this.create.pw0!='') {
@@ -145,6 +153,7 @@ const navbar = {
     _logout() {
       wallet.logout();
       this.logedin  = wallet.isAddress();
+      this.avatar   = false;
       this.update();
     },
     _withdrawalOK() {
