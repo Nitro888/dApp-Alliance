@@ -23,7 +23,7 @@ const view  = new function () {
 		xhr.open("GET", url, true);
 		xhr.send();
 	},
-  this.load = function(id,address) {
+  this.load = function(id,address,callback=null) {
     view.loadJson(conf.api+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+conf.manager+'&topic1='+view.web3.utils.padLeft(address,64),
     (xhr,data)=>{
       if(xhr==null&&data&&data.result&&data.result.length>0){
@@ -31,10 +31,13 @@ const view  = new function () {
         let json  = msgpack.decode(view.web3.utils.hexToBytes(temp['_msgPack']));
         let img   = '<div style="height:100%;width:100%;position:relative;overflow:hidden;">';
         for(let i = 0 ; i < json.imgs.length ; i++ )
-          img += '<img id="'+address+'_'+i+'" src="" style="position:absolute;top:'+json.imgs[i].y+'%;left:'+json.imgs[i].x+'%;width:100%;height:auto;"/>';
+          img += '<img id="'+id+'_'+address+'_'+i+'" src="" style="position:absolute;top:'+json.imgs[i].y+'%;left:'+json.imgs[i].x+'%;width:100%;height:auto;"/>';
         document.getElementById(id).innerHTML = img+'</div>';
+        let store = '0x'+data.result[data.result.length-1].topics[2].toString().slice(-40).toLowerCase();
         for(let i = 0 ; i < json.imgs.length ; i++ )
-          view._asset('0x'+data.result[data.result.length-1].topics[2].toString().slice(-40).toLowerCase(),address+'_'+i,view.web3.utils.padLeft(view.web3.utils.toHex(json.imgs[i].id),64));
+          view._asset(store,id+'_'+address+'_'+i,view.web3.utils.padLeft(view.web3.utils.toHex(json.imgs[i].id),64));
+        if(callback)
+          callback(store);
       } else {
         console.log("error:"+address);
       }
@@ -52,7 +55,8 @@ const view  = new function () {
     });
   },
   this.list = function (address,category,callback=null) {
-    let url = conf.api+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+address+'&topic1='+view.web3.utils.padLeft(view.web3.utils.toHex(category),64);
+    let url = conf.api+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+address+'&topic0='+view.web3.eth.abi.encodeEventSignature(conf.assetLog);
+    url     +=category>=0?'&topic1='+view.web3.utils.padLeft(view.web3.utils.toHex(category),64):'';
     view.loadJson(url,(xhr,data)=>{
       if(xhr==null&&data&&data.result&&data.result.length>0){
         let result = [];
@@ -72,7 +76,5 @@ const view  = new function () {
   }
 }
 
-if(typeof module !== 'undefined') {
-  module.exports.view = view;
-  module.exports.conf = conf;
-}
+module.exports.view = view;
+module.exports.conf = conf;

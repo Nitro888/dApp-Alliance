@@ -18,7 +18,7 @@ const navbar = {
             <b-dropdown-divider></b-dropdown-divider>
             <b-dropdown-item v-on:click="_logout()"><i class="fas fa-sign-out-alt"></i> Logout</b-dropdown-item>
           </b-nav-item-dropdown>
-          <div v-if="logedin" id="avatar" style="height:35px;width:35px;background-color:gray;border-radius:50%;overflow:hidden;"></div>
+          <div v-if="logedin" id="avatarNavbar" style="height:35px;width:35px;background-color:gray;border-radius:50%;overflow:hidden;"></div>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
@@ -132,7 +132,7 @@ const navbar = {
           this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
 
       if(!this.avatar) {
-        avatar.view.load('avatar',wallet.address());
+        avatar.view.load('avatarNavbar',wallet.address());
         this.avatar = true;
       }
     },

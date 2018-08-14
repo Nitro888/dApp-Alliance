@@ -6,6 +6,9 @@ navbar.wallet.pushContract(aMgr.manager,aMgr.address);
 const sMgr  = require('./abi/store.js');
 navbar.wallet.pushContract(sMgr.manager,sMgr.address);
 
+const editor  = require('./avatar/editor.js');
+editor.$children[0].wallet = navbar.wallet;
+
 //console.log(aMgr.manager);
 //console.log(aMgr.avatar);
 //console.log(sMgr.manager);

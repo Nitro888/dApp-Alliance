@@ -1,0 +1,5 @@
+{
+	"address"		:"",
+	"category"	: [{"cat":0,"name":"face"},{"cat":1,"name":"hair"},{"cat":2,"name":"eye"}],
+  "disabled"	: [1]
+}
