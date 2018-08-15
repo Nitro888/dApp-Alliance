@@ -78,7 +78,7 @@ let editor = {
 
       <b-row>
         <b-col lg="4">
-          <div v-show="editor.tab==0" ref="height" style="width:100%;padding-top:100%;position:relative;background-color:gray;">
+          <div v-show="editor.tab==0" ref="height0" style="width:100%;padding-top:100%;position:relative;background-color:gray;">
             <div id="avatarEditor" style="position:absolute;width:100%;height:100%;top:0%;left:0%;"/>
           </div>
           <div v-if="editor.tab==1" style="width:100%;padding-top:100%;position:relative;overflow:hidden;background-color:gray;">
@@ -87,10 +87,10 @@ let editor = {
         </b-col>
 
         <b-col lg="8">
-          <b-nav v-if="editor.tab==0&&avatar.tab.length>0" pills justified tabs class="mb-2">
-            <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.cat" :active="avatar.active==item.cat.toString()" v-on:click="avatar.active=item.cat.toString();">{{item.name}}</b-nav-item>
+          <b-nav v-show="editor.tab==0&&avatar.tab.length>0" ref="height1" pills justified tabs v-on:change="matchHeight();">
+            <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.value" :active="avatar.active==item.value.toString()" v-on:click="avatar.active=item.value.toString();">{{item.text}}</b-nav-item>
           </b-nav>
-          <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height+'px','background-color':'gray'}">
+          <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height0+'px','background-color':'gray'}">
             <b-row v-show="avatar.loaded" style="width:100%;height:100%;overflow-y:scroll;">
               <b-col lg="3" v-for='item in avatar.assets[avatar.active]' v-bind:item="item" v-bind:key="item.index">
                 <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:click="select(item.index);"/>
@@ -99,13 +99,13 @@ let editor = {
           </div>
 
           <div v-if="editor.tab==1">
-            category
+            <b-form-select v-model="editor.selected" :options="this.setting.object.category" class="mb-3" size="sm" />
             <b-form-file size="sm" placeholder="Choose a file..." v-on:change="loadAsset($event.target.files);" accept="image/*"></b-form-file>
           </div>
         </b-col>
       </b-row>
 
-      <div v-show="editor.tab==2" v-bind:style="{ width:'100%',height:height+'px','overflow-y':'scroll'}">
+      <div v-show="editor.tab==2" v-bind:style="{ width:'100%',height:height1+'px','overflow-y':'scroll'}">
         <div style="width:100%;height:100%;overflow-y:scroll;">
           <b-form-textarea size="sm" style="width:100%;height:100%;" v-model="setting.json"></b-form-textarea>
         </div>
@@ -129,28 +129,33 @@ let editor = {
       </b-form-group>
 
     </b-modal>
-
-    <b-button @click="showModal" ref="btnShow">Open Modal</b-button>
   </div>
   `,
   data: function () {
     return {
       wallet      : null,
       address     : '',
+      root        : '',
+      height0     : 235,
+      height1     : 235,
       store       : {address:'',message:'',state:true,about:null},
-      editor      : {tab:0,assetFile:null},
+      editor      : {tab:0,selected:null,assetFile:null},
       contract    : {message:'',state:true,password:''},
-      setting     : {obj:null,json:''},
+      setting     : {default:{"category":[{"value":0,"text":"body"},{"value":1,"text":"fase"},{"value":2,"text":"nose"},{"value":3,"text":"tatoo"},
+                                          {"value":4,"text":"eye"},{"value":5,"text":"eyebrow"},{"value":6,"text":"mouse"},{"value":7,"text":"mustache"},
+                                          {"value":8,"text":"hair"}],"disabled":[]},
+                    object:null,json:''},
       avatar      : {tab:[],active:'',assets:[],loaded:false},
       manager     : null,
       price       : {token:'',value:''}
     }
   },
   created: function () {
-    avatar.view.loadJson("avatar.json",(err,data)=>{
-      this.setting.object = data;
-      this.setting.json   = JSON.stringify(data, null, 2);
-    }); // todo : load from contract
+    //avatar.view.loadJson("avatar.json",(err,data)=>{
+      //this.setting.object = data;
+      this.setting.object = this.setting.default;
+      this.setting.json   = JSON.stringify(this.setting.object, null, 2);
+    //}); // todo : load from contract
     this.manager = new avatar.view.web3.eth.Contract(aMgr.manager,aMgr.address);
   },
   computed: {
@@ -162,9 +167,6 @@ let editor = {
     },
     link:function () {
       return this.wallet&&this.wallet.web3&&this.wallet.web3.utils.isAddress(this.address)?this.wallet.option['network']['href']+"/address/"+this.address:'#';
-    },
-    height:function () {
-      return this.$refs.height?this.$refs.height.clientHeight:235;
     }
   },
   methods: {
@@ -189,6 +191,11 @@ let editor = {
       avatar.view.load('avatarEditor',this.wallet.address(),(address)=>{this.store.address=address;this.loadStore();});
       this.$refs.refModalEditor.show();
     },
+    matchHeight() {
+      let temp      = this.$refs.height1?this.$refs.height1.clientHeight:0;
+      this.height0  = this.$refs.height0?this.$refs.height0.clientHeight-temp:235;
+      this.height1  = this.$refs.height0?this.$refs.height0.clientHeight:235;
+    },
     loadStore(){
       this.avatar.loaded  = false;
       if(this.store.address==''||!this.isAddress(this.store.address)) {
@@ -197,6 +204,8 @@ let editor = {
         this.store.about    = null;
         this.editor.tab     = 0;
         this.address        = '';
+        this.avatar.tab     = [];
+        this.matchHeight();
       } else {
         this.store.state    = true;
         this.store.message  = ""
@@ -208,28 +217,20 @@ let editor = {
           if(!e&&this.isAddress(r[0])) {
             this.store.about  = r;
             this.address      = this.store.address;
+            //this.root         = // todo : loading
             this.price.token  = this.isAddress(r[1])?r[1]:'Eth';
             this.price.value  = avatar.view.web3.utils.fromWei(r[2].toString(),'ether');
 
-            if(this.setting.object.address.toLowerCase()==this.address) {
-              this.avatar.tab     =this.setting.object.category;
-              this.avatar.active  = this.avatar.tab[0].cat.toString();
-              for(let i = 0 ; i < this.setting.object.category.length ; i++) {
-                this.avatar.assets[this.setting.object.category[i]['cat'].toString()] = [];
-                avatar.view.list(this.store.address,this.setting.object.category[i]['cat'],
-                  (cat,list)=>{
-                    this.avatar.assets[cat.toString()] = this._removeDisabled(list,this.setting.object.disabled);
-                    this.avatar.loaded = true;
-                  }
-                );
-              }
-            } else {
-              this.avatar.active                    = '-1';
-              this.avatar.assets[this.avatar.active]= [];
-              avatar.view.list(this.store.address,-1,
+            this.avatar.tab   = this.setting.object.category;
+            this.avatar.active= this.avatar.tab[0].value.toString();
+            this.matchHeight();
+            for(let i = 0 ; i < this.setting.object.category.length ; i++) {
+              this.avatar.assets[this.setting.object.category[i]['value'].toString()] = [];
+              avatar.view.list(this.store.address,this.setting.object.category[i]['value'],
                 (cat,list)=>{
-                  this.avatar.assets[cat.toString()]  = this._removeDisabled(list,this.setting.object.disabled);
+                  this.avatar.assets[cat.toString()] = this._removeDisabled(list,this.setting.object.disabled);
                   this.avatar.loaded = true;
+                  this.matchHeight();
                 }
               );
             }

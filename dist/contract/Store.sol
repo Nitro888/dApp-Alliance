@@ -1,8 +1,31 @@
 pragma solidity ^0.4.24;
 
-import './User.sol';
+contract ERC20Interface {
+    function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
+    function transfer(address to, uint tokens) public returns (bool success);
+    function transferFrom(address from, address to, uint tokens) public returns (bool success);
+}
 
-contract Account {
+contract SafeMath {
+    function safeAdd(uint a, uint b) public pure returns (uint c) {
+        c = a + b;
+        require(c >= a);
+    }
+    function safeSub(uint a, uint b) public pure returns (uint c) {
+        require(b <= a);
+        c = a - b;
+    }
+    function safeMul(uint a, uint b) public pure returns (uint c) {
+        c = a * b;
+        require(a == 0 || c / a == b);
+    }
+    function safeDiv(uint a, uint b) public pure returns (uint c) {
+        require(b > 0);
+        c = a / b;
+    }
+}
+
+contract _Base {
     address internal                manager;
 
     constructor(bytes _msgPack) public {
@@ -22,11 +45,14 @@ contract Account {
     }
 }
 
-contract Creator is Account {
-    constructor(bytes _msgPack) Account(_msgPack) public {}
+contract Creator is _Base {
+    constructor(bytes _msgPack) _Base(_msgPack) public {}
+    function about() constant public returns(address,bool) {
+        return (Manager(manager).owner(this),Manager(manager).copyright(this));
+    }
 }
 
-contract Pack is Account, SafeMath {
+contract Pack is _Base, SafeMath {
     struct _item {
         uint256                     price;
         bool                        weekly;
@@ -42,7 +68,7 @@ contract Pack is Account, SafeMath {
     _item[]                 items;
     uint256                 _income;
 
-    constructor(bytes _msgPack) Account(_msgPack) public {}
+    constructor(bytes _msgPack) _Base(_msgPack) public {}
 
     modifier safeRange(uint256 _index) {
         require(items.length>_index);
@@ -75,7 +101,10 @@ contract Pack is Account, SafeMath {
         return _income;
     }
     // about item
-    function about(uint256 _index) safeRange(_index) constant public returns (uint256,bool,uint256,uint256,uint256,bool,bool) {
+    function about() constant public returns (address,bool) {
+        return (Manager(manager).owner(this),Manager(manager).copyright(this));
+    }
+    function aboutItem(uint256 _index) safeRange(_index) constant public returns (uint256,bool,uint256,uint256,uint256,bool,bool) {
         return (price(_index),items[_index].weekly,items[_index].pointUp,items[_index].pointDn,length(),canBuy(_index),canUse(_index));
     }
 
@@ -126,7 +155,7 @@ contract Pack is Account, SafeMath {
     }
 }
 
-contract Store is Account, SafeMath, User {
+contract Store is _Base, SafeMath {
     struct _info {
         uint8                       share;
         uint256                     shareStart;
@@ -146,16 +175,13 @@ contract Store is Account, SafeMath, User {
         _;
     }
 
-    constructor(bytes _msgPack,address _erc20) Account(_msgPack) public {
+    constructor(bytes _msgPack,address _erc20) _Base(_msgPack) public {
         erc20       = _erc20;
-    }
-    function setUpdater(address _updater) onlyOwner public {
-        updater = _updater;
     }
 
     // about
-    function about() constant public returns (bool,address,uint256,uint256) {
-        return (Manager(manager).copyright(this),erc20,coupons[msg.sender],totalSupply);
+    function about() constant public returns (address,bool,address,uint256,uint256) {
+        return (Manager(manager).owner(this),Manager(manager).copyright(this),erc20,coupons[msg.sender],totalSupply);
     }
 
     // coupon

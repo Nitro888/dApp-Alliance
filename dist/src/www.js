@@ -11,7 +11,11 @@ editor.$children[0].wallet = navbar.wallet;
 
 //console.log(aMgr.manager);
 //console.log(aMgr.avatar);
+//console.log(aMgr.badge);
 //console.log(sMgr.manager);
+//console.log(sMgr.creator);
+//console.log(sMgr.store);
+//console.log(sMgr.pack);
 
 let main = {
   template: `
@@ -90,9 +94,6 @@ let main = {
           <b-form-textarea size="sm" id="desc" placeholder="enter description" v-model="json.desc" :readonly="!(contract.tab==0||contract.tab==4)"></b-form-textarea>
         </b-form-group>
 
-        <b-form-group size="sm" label="Avatar Alliance" label-for="alliance" invalid-feedback="This is a wrong address." :state="isAddressAlliance" v-if="showAlliance">
-          <b-form-input size="sm" type="text" id="alliance" placeholder="avatar alliance address or '0x0' for root" v-model="data.alliance" :readonly="contract.tab!=0"></b-form-input>
-        </b-form-group>
         <b-form-group size="sm" label="Token Address" label-for="token" invalid-feedback="This is a wrong address." :state="isAddressErc20" v-if="showErc20">
           <b-form-input size="sm" type="text" id="token" placeholder="erc20 token address or '0x0' for ethereum" v-model="data.erc20" :readonly="contract.tab!=0"></b-form-input>
         </b-form-group>
@@ -101,12 +102,6 @@ let main = {
         </b-form-group>
         <b-form-group size="sm" label="Stamp" label-for="stamp" v-if="showStamp">
           <b-form-input size="sm" type="number" id="stamp" min="0" max="255" placeholder="stamps for 1 free coupon (0~255, 0 is not free coupon)" v-model="data.stamp" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
-        </b-form-group>
-        <b-form-group size="sm" label="Fee" label-for="fee" v-if="showFee">
-          <b-input-group size="sm">
-            <b-form-input size="sm" type="number" id="fee" min="0" max="100" placeholder="avatar alliance fee (0~100)" v-model="data.fee" :readonly="!(contract.tab==0||contract.tab==3)"></b-form-input>
-            <b-input-group-text slot="append"><i class="fas fa-percent"></i></b-input-group-text>
-          </b-input-group>
         </b-form-group>
         <b-form-group size="sm" label="Share" label-for="share" v-if="showShare">
           <b-input-group size="sm">
@@ -172,7 +167,7 @@ let main = {
         ],
 
         json:{title:'',desc:''},
-        data:{owner:'',creator:'',store:'',alliance:'',erc20:'',price:'',shareStart:'',share:'',fee:'',stamp:''},
+        data:{owner:'',creator:'',store:'',erc20:'',price:'',shareStart:'',share:'',stamp:''},
 
         contents:[
           {left:false,title:"WALLET",image:'c0.jpg',
@@ -185,7 +180,10 @@ let main = {
             inputs:[
               { input:true,key:'avatar',
                 title:'How to get your avatar store.',
-                desc:'If you want to create a avatar store, create wallet and login first.<br/>After login, click <i class="fas fa-plus"></i> button, and write store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
+                desc:'After login, click <i class="fas fa-plus"></i> button, and write avatar store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
+              { input:true,key:'badge',
+                title:'How to get your badge store.',
+                desc:'After login, click <i class="fas fa-plus"></i> button, and write badge store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:false,title:"STORE",image:'c2.jpg',
             inputs:[
@@ -231,9 +229,6 @@ let main = {
       isAddressCreator: function () {
         return this.data.creator==''||this.wallet.web3.utils.isAddress(this.data.creator);
       },
-      isAddressAlliance: function () {
-        return this.data.alliance==''||this.wallet.web3.utils.isAddress(this.data.alliance);
-      },
       isAddressErc20: function () {
         return this.data.erc20==''||this.wallet.web3.utils.isAddress(this.data.erc20);
       },
@@ -246,9 +241,6 @@ let main = {
       isCreator : function () {
         return this.contract.key=='creator';
       },
-      showAlliance : function () {
-        return this.contract.key=='avatar';
-      },
       showErc20 : function () {
         return this.contract.key=='avatar'||this.contract.key=='store';
       },
@@ -256,9 +248,6 @@ let main = {
         return this.contract.key=='avatar';
       },
       showStamp : function () {
-        return this.contract.key=='avatar';
-      },
-      showFee : function () {
         return this.contract.key=='avatar';
       },
       showShare : function () {
@@ -334,6 +323,7 @@ let main = {
           let data      = null;
           switch (this.contract.key) {
             case 'avatar':  address   = aMgr.address; data = this._avatar(address,this._json(this.json),this._json(this.data)); break;
+            case 'badge':   address   = aMgr.address; data = this._badge(address,this._json(this.json),this._json(this.data)); break;
             case 'store':   address   = sMgr.address; data = this._store(address,this._json(this.json),this._json(this.data));  break;
             case 'pack':    address   = sMgr.address; data = this._pack(address,this._json(this.json),this._json(this.data));   break;
             case 'creator': address   = sMgr.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
@@ -352,11 +342,17 @@ let main = {
         switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
           case 0:
             result  = this.wallet.contract[address].c.methods.store(this.wallet.web3.utils.bytesToHex(msgpack.encode(json)),
-                                                                    data.alliance,
                                                                     data.erc20,
                                                                     data.price?this.wallet.web3.utils.toWei(data.price,'ether'):0,
-                                                                    data.share?data.share:0,
                                                                     data.stamp?data.stamp:0).encodeABI();
+            break;
+        }
+        return result;
+      },
+      _badge(address,json,data) {
+        switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
+          case 0:
+            result  = this.wallet.contract[address].c.methods.badge(this.wallet.web3.utils.bytesToHex(msgpack.encode(json))).encodeABI();
             break;
         }
         return result;
@@ -404,6 +400,9 @@ let main = {
         let contract = {address:'',topic0:'',key:key};
         switch (key) {
           case 'avatar':
+            contract  = {address:aMgr.address,topic0:aMgr.manager[21]['signature'],key:key};
+            break;
+          case 'badge':
             contract  = {address:aMgr.address,topic0:aMgr.manager[22]['signature'],key:key};
             break;
           case 'store':
@@ -436,7 +435,8 @@ let main = {
         if(this.wallet.web3&&this.wallet.web3.utils.isAddress(address)) {
           switch (key) {
             case 'avatar':  this.showAvatar(key,address,error,success); break;
-            case 'store':   this.showEditStore(key,address,error,success); break;
+            case 'badge':   this.showBadge(key,address,error,success); break;
+            case 'store':   this.showStore(key,address,error,success); break;
             case 'pack':    this.showPack(key,address,error,success); break;
             case 'creator': this.showCreator(key,address,error,success); break;
           }
@@ -444,60 +444,76 @@ let main = {
           this.$refs.refModalContract.show();
       },
       showAvatar(key,address,error=null,success=null) {
-        this.wallet.contract[aMgr.address].c.methods.about(address).call((e,r)=>{
+        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.about(address),aMgr.avatar[8],
+          (r,json)=>{
+            this.data.owner = r[0];
+            this.data.erc20 = r[2];
+            this.data.price = this.wallet.web3.utils.fromWei(r[3].toString(),'ether');
+            this.data.stamp = parseInt(r[4]);
+            if(!success)
+              this.$refs.refModalContract.show();
+        });
+      },
+      showBadge(key,address,error=null,success=null) {
+        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.status(address,this.wallet.address()),aMgr.badge[4],
+          (r,json)=>{
+            this.data.owner = r[0];
+            //this.data.updater = r[1];
+            if(!success)
+              this.$refs.refModalContract.show();
+        });
+      },
+      showStore(key,address,error=null,success=null) {
+        let temp = new this.wallet.web3.eth.Contract(sMgr.store,address);
+        this._showContract(key,address,temp.methods.about(),sMgr.store[14],
+          (r,json)=>{
+            this.data.owner = r[0];
+            //  = r[1];// copyright
+            this.data.erc20 = r[2];
+            if(!success)
+              this.$refs.refModalContract.show();
+        });
+      },
+      showPack(key,address,error=null,success=null) {
+        let temp = new this.wallet.web3.eth.Contract(sMgr.pack,address);
+        this._showContract(key,address,temp.methods.about(),sMgr.pack[22],
+          (r,json)=>{
+            this.data.owner = r[0];
+            //  = r[1];// copyright
+            if(!success)
+              this.$refs.refModalContract.show();
+        });
+      },
+      showCreator(key,address,error=null,success=null) {
+        let temp = new this.wallet.web3.eth.Contract(sMgr.creator,address);
+        this._showContract(key,address,temp.methods.about(),sMgr.creator[3],
+          (r,json)=>{
+            this.data.owner = r[0];
+            //  = r[1];// copyright
+            if(!success)
+              this.$refs.refModalContract.show();
+        });
+      },
+      _showContract(key,address,contract,abi,callback=null) {
+        contract.call((e,r)=>{
           if(e==null){
-            let abi       = aMgr.avatar[12];
-            let signature = this.wallet.web3.eth.abi.encodeEventSignature(abi);
-            let topics    = 'topic0='+signature;
+            let topics    = 'topic0='+this.wallet.web3.eth.abi.encodeEventSignature(abi);
             this.wallet.logs(address,topics,(data)=>{
               if(data.length>0) {
                 let temp    = this.wallet.web3.eth.abi.decodeLog(abi['inputs'],data[data.length-1].data,data[data.length-1].topics);
                 let json    = msgpack.decode(this.wallet.web3.utils.hexToBytes(temp['_msgPack']));
 
-                this.data.owner = r[0];
-                this.data.erc20 = r[1];
-                this.data.price = this.wallet.web3.utils.fromWei(r[2].toString(),'ether');
-                this.data.share = parseInt(r[3]);
-                this.data.stamp = parseInt(r[4]);
-
                 for (var key in json)
                   if(json[key]!='')
                     this.json[key] = json[key];
 
-                //console.log(r);
-                //console.log(json);
-
-                if(!success)
-                  this.$refs.refModalContract.show();
+                if(callback)
+                  callback(r,json);
               }
             });
           }
         });
-      },
-      showEditStore(key,address,error=null,success=null) {
-        this.wallet.contract[sMgr.address].c.methods.about(address).call((e,r)=>{
-          console.log(r);
-          if(e==null){
-
-          }
-        });
-      },
-      showPack(key,address,error=null,success=null) {
-        this.wallet.contract[sMgr.address].c.methods.about(address).call((e,r)=>{
-          console.log(r);
-          if(e==null){
-
-          }
-        });
-      },
-      showCreator(key,address,error=null,success=null) {
-        this.wallet.contract[sMgr.address].c.methods.about(address).call((e,r)=>{
-          console.log(r);
-          if(e==null){
-
-          }
-        });
-      },
+      }
       //------------------------------------------------------------------------------------------------
     }
 }

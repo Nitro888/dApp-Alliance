@@ -1,8 +1,7 @@
 const conf = {
-  manager   : '0x22d5bba3532c1ab39a55d0051eca18b3179ab6ba',
-  avatar    : [{"constant":false,"inputs":[{"name":"_contract","type":"address"},{"name":"_msgPack","type":"bytes"}],"name":"avatar","outputs":[],"payable":true,"stateMutability":"payable","type":"function"}],
+  manager   : '0x79b235969fc227bbb08ad4a67504c7750f4976a1',
   avatarLog : {"anonymous":false,"inputs":[{"indexed":true,"name":"_user","type":"address"},{"indexed":true,"name":"_contract","type":"address"},{"indexed":false,"name":"_msgPack","type":"bytes"}],"name":"AVATAR","type":"event"},
-  asset     : [{"constant":false,"inputs":[{"name":"_category","type":"uint256"},{"name":"_image","type":"bytes"}],"name":"asset","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}],
+  badgeLog  : {"anonymous":false,"inputs":[{"indexed":true,"name":"_index","type":"uint8"},{"indexed":false,"name":"_title","type":"string"},{"indexed":false,"name":"_img","type":"bytes"}],"name":"ASSET","type":"event"},
   assetLog  : {"anonymous":false,"inputs":[{"indexed":true,"name":"_category","type":"uint256"},{"indexed":true,"name":"_index","type":"uint256"},{"indexed":false,"name":"_img","type":"bytes"}],"name":"ASSET","type":"event"},
   provider  : "https://ropsten.infura.io",
   api       : "https://api-ropsten.etherscan.io",
