@@ -607,7 +607,7 @@ Vue.component('contents',{
       },
       github:{
         WALLET:'https://github.com/Nitro888/nitro888.github.io',
-        AVATAR:'https://github.com/Nitro888/avatar.nitro888.com',
+        AVATAR:'https://github.com/Nitro888/nitro888.github.io',
         STORE:'https://github.com/Nitro888/toonist.nitro888.com',
         CREATOR:'https://github.com/Nitro888/toonist.nitro888.com',
       }

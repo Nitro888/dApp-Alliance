@@ -39,7 +39,7 @@ let editor = {
           <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height1+'px','background-color':'gray'}">
             <b-row v-show="avatar.loaded" style="width:100%;height:100%;overflow-y:scroll;">
               <b-col lg="3" v-for='item in avatar.assets[avatar.active]' v-bind:item="item" v-bind:key="item.index">
-                <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:click="select(item.index);"/>
+                <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:mouseover="mouseOver(item.index)" v-on:click="select(item.index);"/>
               </b-col>
             </b-row>
           </div>
@@ -206,6 +206,9 @@ let editor = {
        }
        fr.readAsDataURL(files[0]);
     },
+    mouseOver(index) {
+      //console.log(index);
+    },
     select(index) {
       let asset = this.avatar.layer.findIndex((obj)=>{return obj.layer==this.avatar.active;});
       if (asset > -1) this.avatar.layer.splice(asset, 1);
@@ -215,7 +218,7 @@ let editor = {
 
       this.avatar.json = {imgs:[]};
       for(let i=0 ; i < this.avatar.layer.length ; i++)
-        this.avatar.json.imgs.push({id:this.avatar.layer[i].index,x:0,y:0});
+        this.avatar.json.imgs.push({id:this.avatar.layer[i].index,p:{x:0,y:0},c:'#000000',m:false});
       avatar.view.draw('avatarEditor',this.wallet.address(),this.address,this.avatar.json);
     },
     uploadAvatar(){

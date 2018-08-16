@@ -12,13 +12,19 @@ const navbar = {
           <b-nav-item v-if="!logedin" v-on:click="showCreate()"><i class="far fa-plus-square"></i></b-nav-item>
           <b-nav-item v-if="!logedin" v-on:click="_login()"><i class="fas fa-sign-in-alt"></i></b-nav-item>
           <b-nav-item-dropdown v-if="logedin" text='<i class="fas fa-wallet"></i>' no-caret right>
+            <b-dropdown-header v-show="logedin&&avatarHas">
+              <div style="width:100%;padding-top:100%;position:relative;background-color:gray;border-radius:50%;overflow:hidden;">
+                <div id="avatarDropdown" style="position:absolute;width:100%;height:100%;top:0%;left:0%;"/>
+              </div>
+            </b-dropdown-header>
+            <b-dropdown-divider></b-dropdown-divider>
             <b-dropdown-item v-on:click="showDeposit()"><i class="fas fa-qrcode"></i> Deposit</b-dropdown-item>
             <b-dropdown-divider></b-dropdown-divider>
             <navbar-item v-for="token in tokenList" v-bind:item="token" v-bind:key="token.id"></navbar-item>
             <b-dropdown-divider></b-dropdown-divider>
             <b-dropdown-item v-on:click="_logout()"><i class="fas fa-sign-out-alt"></i> Logout</b-dropdown-item>
           </b-nav-item-dropdown>
-          <div v-if="logedin" id="avatarNavbar" style="height:35px;width:35px;background-color:gray;border-radius:50%;overflow:hidden;"></div>
+          <div v-show="logedin&&avatarHas" id="avatarNavbar" style="height:35px;width:35px;background-color:gray;border-radius:50%;overflow:hidden;"></div>
         </b-navbar-nav>
       </b-collapse>
     </b-navbar>
@@ -89,7 +95,8 @@ const navbar = {
   data: function () {
     return {
       logedin       : false,
-      avatar        : false,
+      avatarLoad    : false,
+      avatarHas     : false,
       tokenDefault  : '<i class="fas fa-coins"></i>',
       tokenList     : [],
 
@@ -131,9 +138,10 @@ const navbar = {
         for(let i = 0 ; i < this.tokenList.length ; i++ )
           this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
 
-      if(!this.avatar) {
-        avatar.view.load('avatarNavbar',wallet.address());
-        this.avatar = true;
+      if(!this.avatarLoad) {
+        avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{this.avatarHas=true;});
+        avatar.view.load('avatarDropdown',wallet.address());
+        this.avatarLoad = true;
       }
     },
     _createOK() {
@@ -152,8 +160,9 @@ const navbar = {
     },
     _logout() {
       wallet.logout();
-      this.logedin  = wallet.isAddress();
-      this.avatar   = false;
+      this.logedin    = wallet.isAddress();
+      this.avatarLoad = false;
+      this.avatarHas  = false;
       this.update();
     },
     _withdrawalOK() {

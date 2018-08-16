@@ -40,8 +40,14 @@ const view  = new function () {
   },
   this.draw = function (id,address,store,json,callback=null) {
     let img   = '<div style="height:100%;width:100%;position:relative;overflow:hidden;">';
-    for(let i = 0 ; i < json.imgs.length ; i++ )
-      img += '<img id="'+id+'_'+address+'_'+i+'" src="" style="position:absolute;top:'+json.imgs[i].y+'%;left:'+json.imgs[i].x+'%;width:100%;height:auto;"/>';
+    for(let i = 0 ; i < json.imgs.length ; i++ ) {
+      let style = 'position:absolute;width:100%;height:auto;';
+      if(json.imgs[i].p)  style += 'top:'+json.imgs[i].p.y+'%;left:'+json.imgs[i].p.x+'%;';
+      if(json.imgs[i].c)  style += 'color:'+json.imgs[i].c;
+      if(json.imgs[i].m)  {/*todo*/}
+      img += '<img id="'+id+'_'+address+'_'+i+'" src="" style="'+style+'"/>';
+    }
+
     document.getElementById(id).innerHTML = img+'</div>';
 
     for(let i = 0 ; i < json.imgs.length ; i++ )
