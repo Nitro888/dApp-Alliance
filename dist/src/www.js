@@ -17,6 +17,8 @@ editor.$children[0].wallet = navbar.wallet;
 //console.log(sMgr.store);
 //console.log(sMgr.pack);
 
+//console.log(editor);
+
 let main = {
   template: `
   <div>
@@ -441,7 +443,8 @@ let main = {
             case 'creator': this.showCreator(key,address,error,success); break;
           }
         } else if(address=='')
-          this.$refs.refModalContract.show();
+          //this.$refs.refModalContract.show();
+          this.showAvatarEditor();
       },
       showAvatar(key,address,error=null,success=null) {
         this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.about(address),aMgr.avatar[8],
@@ -513,6 +516,9 @@ let main = {
             });
           }
         });
+      },
+      showAvatarEditor() {
+        editor.$children[0].showModal();
       }
       //------------------------------------------------------------------------------------------------
     }

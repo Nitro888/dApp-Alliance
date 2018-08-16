@@ -1,60 +1,6 @@
 let avatar  = require('./view.js');
 const aMgr  = require('../abi/avatar.js');
 
-/*
-const editor  = new function () {
-  this.web3   = new Web3(new Web3.providers.HttpProvider(avatar.conf.provider)),
-  this.manager= null,
-  this.store  = null,
-	this.loadJson = function(url, callback) {
-		var xhr = new XMLHttpRequest();
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState === XMLHttpRequest.DONE) {
-				if (xhr.status === 200 && callback)
-						callback(null,JSON.parse(xhr.responseText));
-				else if (callback)
-						callback(xhr,null);
-			}
-		};
-		xhr.open("GET", url, true);
-		xhr.send();
-	},
-  this.sendTx = function(from,to,pk,data=null,value=0,error=null,success=null) {
-    editor.web3.eth.getGasPrice((e,gasPrice)=>{
-      if(!e) {
-        let tx = {'from':from,'to':to,'value':editor.web3.utils.toHex(value)};
-        if(data!=null)
-        	tx['data']	= data;
-        editor.web3.eth.estimateGas(tx).then((gasLimit)=>{
-          tx['gasPrice']	= editor.web3.utils.toHex(parseInt(gasPrice));
-          tx['gasLimit']	= editor.web3.utils.toHex(parseInt(gasLimit));
-          editor.web3.eth.accounts.privateKeyToAccount(pk).signTransaction(tx).then((r)=>{
-            editor.web3.eth.sendSignedTransaction(r.rawTransaction)
-              .on('transactionHash',(r)=>{
-                if(success)
-                  success(r);
-              }).then((r)=>{
-                if(success)
-                  success(r);
-              }).catch((e)=>{if(error)error(e);});
-          });
-        });
-      }
-    });
-  },
-  this.uploadAsset = function(who,pk,avatar,category,file,error=null,success=null) {
-    if(!editor.store)
-      editor.store  = new editor.web3.eth.Contract(avatar.conf.asset,avatar);
-    editor.sendTx(who,avatar,pk,editor.store.methods.asset(category,editor.web3.utils.utf8ToHex(file)).encodeABI(),0,error,success);
-  },
-  this.saveAvatar = function (who,pk,avatar,manager,json,price,error=null,success=null) {
-    if(!editor.manager)
-      editor.manager= new editor.web3.eth.Contract(avatar.conf.avatar,manager);
-    editor.sendTx(who,manager,pk,editor.manager.methods.avatar(avatar,editor.web3.utils.bytesToHex(msgpack.encode(json))).encodeABI(),editor.web3.utils.toWei(price.toString(),'ether'),error,success);
-  }
-}
-*/
-
 let editor = {
   template: `
   <div>
@@ -90,7 +36,7 @@ let editor = {
           <b-nav v-show="editor.tab==0&&avatar.tab.length>0" ref="height1" pills justified tabs v-on:change="matchHeight();">
             <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.value" :active="avatar.active==item.value.toString()" v-on:click="avatar.active=item.value.toString();">{{item.text}}</b-nav-item>
           </b-nav>
-          <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height0+'px','background-color':'gray'}">
+          <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height1+'px','background-color':'gray'}">
             <b-row v-show="avatar.loaded" style="width:100%;height:100%;overflow-y:scroll;">
               <b-col lg="3" v-for='item in avatar.assets[avatar.active]' v-bind:item="item" v-bind:key="item.index">
                 <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:click="select(item.index);"/>
@@ -99,13 +45,13 @@ let editor = {
           </div>
 
           <div v-if="editor.tab==1">
-            <b-form-select v-model="editor.selected" :options="this.setting.object.category" class="mb-3" size="sm" />
+            <b-form-select v-model="editor.selected" :options="this.avatar.tab" class="mb-3" size="sm" />
             <b-form-file size="sm" placeholder="Choose a file..." v-on:change="loadAsset($event.target.files);" accept="image/*"></b-form-file>
           </div>
         </b-col>
       </b-row>
 
-      <div v-show="editor.tab==2" v-bind:style="{ width:'100%',height:height1+'px','overflow-y':'scroll'}">
+      <div v-show="editor.tab==2" v-bind:style="{ width:'100%',height:height0+'px','overflow-y':'scroll'}">
         <div style="width:100%;height:100%;overflow-y:scroll;">
           <b-form-textarea size="sm" style="width:100%;height:100%;" v-model="setting.json"></b-form-textarea>
         </div>
@@ -135,28 +81,19 @@ let editor = {
     return {
       wallet      : null,
       address     : '',
-      root        : '',
       height0     : 235,
       height1     : 235,
       store       : {address:'',message:'',state:true,about:null},
       editor      : {tab:0,selected:null,assetFile:null},
       contract    : {message:'',state:true,password:''},
-      setting     : {default:{"category":[{"value":0,"text":"body"},{"value":1,"text":"fase"},{"value":2,"text":"nose"},{"value":3,"text":"tatoo"},
+      setting     : {default:{"category":[{"value":0,"text":"body"},{"value":1,"text":"face"},{"value":2,"text":"nose"},{"value":3,"text":"tatoo"},
                                           {"value":4,"text":"eye"},{"value":5,"text":"eyebrow"},{"value":6,"text":"mouse"},{"value":7,"text":"mustache"},
                                           {"value":8,"text":"hair"}],"disabled":[]},
-                    object:null,json:''},
-      avatar      : {tab:[],active:'',assets:[],loaded:false},
+                    json:''},
+      avatar      : {tab:[],active:'',assets:[],loaded:false,json:null,layer:[]},
       manager     : null,
-      price       : {token:'',value:''}
+      price       : {token:'',value:'',erc20:'',price:''}
     }
-  },
-  created: function () {
-    //avatar.view.loadJson("avatar.json",(err,data)=>{
-      //this.setting.object = data;
-      this.setting.object = this.setting.default;
-      this.setting.json   = JSON.stringify(this.setting.object, null, 2);
-    //}); // todo : load from contract
-    this.manager = new avatar.view.web3.eth.Contract(aMgr.manager,aMgr.address);
   },
   computed: {
     isLogedIn: function () {
@@ -168,6 +105,14 @@ let editor = {
     link:function () {
       return this.wallet&&this.wallet.web3&&this.wallet.web3.utils.isAddress(this.address)?this.wallet.option['network']['href']+"/address/"+this.address:'#';
     }
+  },
+  created: function () {
+    this.manager        = new avatar.view.web3.eth.Contract(aMgr.manager,aMgr.address);
+  },
+  updated: function () {
+    this.$nextTick(function () {
+      this.matchHeight();
+    });
   },
   methods: {
     isAddress (address) {
@@ -187,14 +132,14 @@ let editor = {
       this.avatar.loaded    = false;
       this.price.token      = '';
       this.price.value      = '';
+      this.avatar.layer     = [];
       document.getElementById('avatarEditor').innerHTML = '';
       avatar.view.load('avatarEditor',this.wallet.address(),(address)=>{this.store.address=address;this.loadStore();});
       this.$refs.refModalEditor.show();
     },
     matchHeight() {
-      let temp      = this.$refs.height1?this.$refs.height1.clientHeight:0;
-      this.height0  = this.$refs.height0?this.$refs.height0.clientHeight-temp:235;
-      this.height1  = this.$refs.height0?this.$refs.height0.clientHeight:235;
+      this.height0  = this.$refs.height0&&this.$refs.height0.clientHeight>0?this.$refs.height0.clientHeight:235;
+      this.height1  = this.height0-(this.$refs.height1?this.$refs.height1.clientHeight:0);
     },
     loadStore(){
       this.avatar.loaded  = false;
@@ -205,7 +150,6 @@ let editor = {
         this.editor.tab     = 0;
         this.address        = '';
         this.avatar.tab     = [];
-        this.matchHeight();
       } else {
         this.store.state    = true;
         this.store.message  = ""
@@ -214,26 +158,31 @@ let editor = {
         this.address        = '';
 
         this.manager.methods.about(this.store.address).call((e,r)=>{
-          if(!e&&this.isAddress(r[0])) {
+          if(!e&&this.isAddress(r[0])&&r[1]) {
             this.store.about  = r;
             this.address      = this.store.address;
-            //this.root         = // todo : loading
-            this.price.token  = this.isAddress(r[1])?r[1]:'Eth';
-            this.price.value  = avatar.view.web3.utils.fromWei(r[2].toString(),'ether');
+            this.price.erc20  = r[2];
+            this.price.amount = r[3];
+            this.price.token  = this.isAddress(this.price.erc20)?this.price.erc20:'Eth';
+            this.price.value  = avatar.view.web3.utils.fromWei(this.price.amount.toString(),'ether');
 
-            this.avatar.tab   = this.setting.object.category;
-            this.avatar.active= this.avatar.tab[0].value.toString();
-            this.matchHeight();
-            for(let i = 0 ; i < this.setting.object.category.length ; i++) {
-              this.avatar.assets[this.setting.object.category[i]['value'].toString()] = [];
-              avatar.view.list(this.store.address,this.setting.object.category[i]['value'],
-                (cat,list)=>{
-                  this.avatar.assets[cat.toString()] = this._removeDisabled(list,this.setting.object.disabled);
-                  this.avatar.loaded = true;
-                  this.matchHeight();
-                }
-              );
-            }
+            avatar.view.setting(this.address,(data)=>{
+
+              data              = data?msgpack.decode(data):null;
+              this.avatar.tab   = data&&data.category?data.category:this.setting.default.category;
+              this.avatar.active= this.avatar.tab[0].value.toString();
+              this.setting.json = JSON.stringify(data?data:this.setting.default, null, 2);
+
+              for(let i = 0 ; i < this.avatar.tab.length ; i++) {
+                this.avatar.assets[this.avatar.tab[i]['value'].toString()] = [];
+                avatar.view.list(this.store.address,this.avatar.tab[i]['value'],
+                  (cat,list)=>{
+                    this.avatar.assets[cat.toString()] = this._removeDisabled(list,data&&data.disabled?data.disabled:[]);
+                    this.avatar.loaded = true;
+                  }
+                );
+              }
+            });
 
             if(this.wallet&&this.wallet.web3&&this.wallet.isAddress()&&r[0].toLowerCase()==this.wallet.address().toLowerCase())
               this.store.message  = "you are store owner";
@@ -258,46 +207,43 @@ let editor = {
        fr.readAsDataURL(files[0]);
     },
     select(index) {
-      console.log(index);
+      let asset = this.avatar.layer.findIndex((obj)=>{return obj.layer==this.avatar.active;});
+      if (asset > -1) this.avatar.layer.splice(asset, 1);
+
+      this.avatar.layer.push({layer:this.avatar.active,index:index});
+      this.avatar.layer.sort(function(a, b){return parseInt(a.layer)-parseInt(b.layer)});
+
+      this.avatar.json = {imgs:[]};
+      for(let i=0 ; i < this.avatar.layer.length ; i++)
+        this.avatar.json.imgs.push({id:this.avatar.layer[i].index,x:0,y:0});
+      avatar.view.draw('avatarEditor',this.wallet.address(),this.address,this.avatar.json);
     },
     uploadAvatar(){
       this.store.address  = this.address;
-      if(this.isAddress(this.store.address)) {
-        this.store.state        = true;
-        this.store.message      = ""
-        this.store.about        = null;
-
-        this.manager.methods.about(this.store.address).call((e,r)=>{
-          if(!e&&this.isAddress(r[0])) {
-            this.store.about    = r;
-
-            if(this.wallet&&this.wallet.web3&&this.wallet.isAddress()) {
-                // todo : upload avatar
-            }
-          }
-        });
+      if(this.isAddress(this.store.address)&&this.avatar.json) {
+        this.contract.state     = true;
+        this.contract.message   = "";
+        let data  = this.manager.methods.avatar(this.store.address,this.wallet.web3.utils.bytesToHex(msgpack.encode(this.avatar.json))).encodeABI();
+        if(this.isAddress(this.price.erc20)) {
+          // todo
+        } else
+          this.wallet.sendTx(aMgr.address,this.contract.password,this.price.amount,data,(e)=>{this.contract.state=false;this.contract.message=e;},(h)=>{this.contract.state=true;this.contract.message="Tx:"+h;},(r)=>{this.contract.state=true;this.contract.message="Success";});
       }
     },
     uploadAsset(){
       this.store.address  = this.address;
-      if(this.isAddress(this.store.address)) {
-        this.store.state        = true;
-        this.store.message      = ""
-        this.store.about        = null;
-
-        this.manager.methods.about(this.store.address).call((e,r)=>{
-          if(!e&&this.isAddress(r[0])) {
-            this.store.about    = r;
-
-            if(this.wallet&&this.wallet.web3&&this.wallet.isAddress()&&this.store.about[0].toLowerCase()==this.wallet.address().toLowerCase()) {
-                // todo : upload asset
-            }
-          }
-        });
+      if(this.isAddress(this.store.address)&&this.editor.assetFile) {
+        this.contract.state     = true;
+        this.contract.message   = "";
+        let temp  = new this.wallet.web3.eth.Contract(aMgr.avatar,this.address);
+        let data  = temp.methods.asset(this.editor.selected,this.wallet.web3.utils.utf8ToHex(this.editor.assetFile)).encodeABI();
+        this.wallet.sendTx(this.store.address,this.contract.password,0,data,(e)=>{this.contract.state=false;this.contract.message=e;},(h)=>{this.contract.state=true;this.contract.message="Tx:"+h;},(r)=>{this.contract.state=true;this.contract.message="Success";});
       }
     },
     updateSetting() {
+      this.store.address  = this.address;
 
+      // todo :
     }
   }
 }
