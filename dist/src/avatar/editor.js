@@ -118,7 +118,7 @@ let editor = {
     isAddress (address) {
       return avatar.view.web3.utils.isAddress(address)&&address!='0x0000000000000000000000000000000000000000';
     },
-    showModal () {
+    showModal (address) {
       this.store.state      = true;
       this.store.message    = '';
       this.store.address    = '';
@@ -134,8 +134,8 @@ let editor = {
       this.price.value      = '';
       this.avatar.layer     = [];
       document.getElementById('avatarEditor').innerHTML = '';
-      avatar.view.load('avatarEditor',this.wallet.address(),(address)=>{this.store.address=address;this.loadStore();});
-      this.$refs.refModalEditor.show();
+      this.store.address    = address;
+      avatar.view.load('avatarEditor',this.wallet.address(),()=>{this.loadStore();this.$refs.refModalEditor.show();},(store)=>{this.store.address=store;this.loadStore();this.$refs.refModalEditor.show();});
     },
     matchHeight() {
       this.height0  = this.$refs.height0&&this.$refs.height0.clientHeight>0?this.$refs.height0.clientHeight:235;

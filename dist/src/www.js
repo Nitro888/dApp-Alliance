@@ -70,7 +70,7 @@ let main = {
           <b-nav-item :active="contract.tab==5" :disabled="contract.address==''" v-on:click="contract.tab=5;"><i class="fas fa-info"></i></b-nav-item>
         </b-nav>
 
-        <b-form-group size="sm" label="Contract" v-if="this.contract.address!=''">
+        <b-form-group size="sm" label="Contract" v-if="contract.address!=''">
           <b-input-group size="sm">
             <b-form-input size="sm" type="text" v-model="contract.address" readonly></b-form-input>
             <b-input-group-append>
@@ -257,7 +257,7 @@ let main = {
       },
       showShareStart : function () {
         return this.contract.key=='pack';
-      },
+      }
     },
     methods: {
       //------------------------------------------------------------------------------------------------
@@ -443,8 +443,7 @@ let main = {
             case 'creator': this.showCreator(key,address,error,success); break;
           }
         } else if(address=='')
-          //this.$refs.refModalContract.show();
-          this.showAvatarEditor();
+          this.$refs.refModalContract.show();
       },
       showAvatar(key,address,error=null,success=null) {
         this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.about(address),aMgr.avatar[8],
@@ -516,9 +515,6 @@ let main = {
             });
           }
         });
-      },
-      showAvatarEditor() {
-        editor.$children[0].showModal();
       }
       //------------------------------------------------------------------------------------------------
     }
@@ -537,6 +533,7 @@ Vue.component('content-sub',{
                     </b-input-group-prepend>
                     <b-form-input type="text" placeholder="contract adress" v-model="address"></b-form-input>
                     <b-input-group-append>
+                      <b-btn size="sm" variant="outline-primary" v-if="sub.key=='avatar'" v-on:click="showAvatarEditor()"><i class="fas fa-user-circle"></i></b-btn>
                       <b-btn size="sm" variant="outline-primary" v-on:click="about()"><i class="fas fa-info"></i></b-btn>
                     </b-input-group-append>
                   </b-input-group>
@@ -564,6 +561,10 @@ Vue.component('content-sub',{
       contract(address='') {
         //this.address  = "";
         app.$children[0].showContract(this.sub.key,address,(r)=>{this.state=false;this.message=r;}/*,(r)=>{this.state=true;this.message=r;}*/);
+      },
+      showAvatarEditor() {
+        if(this.wallet.web3.utils.isAddress(this.address))
+          editor.$children[0].showModal(this.address);
       },
       about() {
         if(this.wallet.web3.utils.isAddress(this.address))

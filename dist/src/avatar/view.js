@@ -23,16 +23,18 @@ const view  = new function () {
 		xhr.open("GET", url, true);
 		xhr.send();
 	},
-  this.load = function(id,address,callback=null) {
+  this.load = function(id,address,error=null,success=null) {
     view.loadJson(conf.api+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+conf.manager+'&topic0='+view.web3.eth.abi.encodeEventSignature(conf.avatarLog)+'&topic1='+view.web3.utils.padLeft(address,64),
     (xhr,data)=>{
       if(xhr==null&&data&&data.result&&data.result.length>0){
         let store = '0x'+data.result[data.result.length-1].topics[2].toString().slice(-40).toLowerCase();
         let temp  = view.web3.eth.abi.decodeLog(conf.avatarLog['inputs'],data.result[data.result.length-1].data,data.result[data.result.length-1].topics);
         let json  = msgpack.decode(view.web3.utils.hexToBytes(temp['_msgPack']));
-        view.draw(id,address,store,json,callback);
+        view.draw(id,address,store,json,success);
       } else {
         console.log("error:"+address);
+        if(error)
+          error();
       }
     });
   },
