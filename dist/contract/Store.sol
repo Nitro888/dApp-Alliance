@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 contract ERC20Interface {
+    function balanceOf(address tokenOwner) public constant returns (uint balance);
     function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
     function transfer(address to, uint tokens) public returns (bool success);
     function transferFrom(address from, address to, uint tokens) public returns (bool success);
@@ -207,26 +208,36 @@ contract Store is _Base, SafeMath {
     }
 
     // buy
+    function balanceOf(address _erc20, address _tokenOwner) public constant returns (uint balance) {
+        if(_erc20==address(0))
+            return address(this).balance;
+        return ERC20Interface(_erc20).balanceOf(_tokenOwner);
+    }
+    function min(uint256 _a, uint256 _b) private pure returns (uint256) {
+        if(_a>_b)
+            return _b;
+        return _a;
+    }
     function buy(address _pack, uint256 _index) payable public {
-        uint256 price   = Pack(_pack).price(_index);
-        uint256 pay     = erc20==address(0) ? msg.value : ERC20Interface(erc20).allowance(msg.sender,this);
+        uint256 _price  = Pack(_pack).price(_index);
+        uint256 _value  = min(erc20==address(0) ? msg.value : ERC20Interface(erc20).allowance(msg.sender,this),balanceOf(erc20,msg.sender));
+        require((_value>0&&_value==_price)||(_value==0&&coupons[msg.sender]>0));
         require(Pack(_pack).canBuy(_index)&&Manager(manager).copyright(this));
-        require(pay==price||coupons[msg.sender]>0);
 
-        if(pay==0) {
+        if(_value==0) {
             coupons[msg.sender] = safeSub(coupons[msg.sender],1);
             totalSupply         = safeSub(totalSupply,1);
             Pack(_pack).buy(_index,msg.sender,0,0);
         } else {
             if(erc20!=address(0))
-                ERC20Interface(erc20).transferFrom(msg.sender,this,price);
+                ERC20Interface(erc20).transferFrom(msg.sender,this,_price);
 
             uint256 creator = 0;
 
             if(packs[_pack].incomes[_index]>=packs[_pack].shareStart)
-                creator = safeDiv(safeMul(price,packs[_pack].share),100);
+                creator = safeDiv(safeMul(_price,packs[_pack].share),100);
 
-            uint256 store   = safeSub(price,creator);
+            uint256 store   = safeSub(_price,creator);
 
             packs[_pack].incomes[_index]    = safeAdd(packs[_pack].incomes[_index],store);
             Pack(_pack).buy(_index,msg.sender,creator,store);

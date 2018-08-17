@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 contract ERC20Interface {
+    function balanceOf(address tokenOwner) public constant returns (uint balance);
     function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
     function transfer(address to, uint tokens) public returns (bool success);
     function transferFrom(address from, address to, uint tokens) public returns (bool success);
@@ -216,10 +217,20 @@ contract Manager is SafeMath {
 
     // register Avatar
     event AVATAR (address indexed _user, address indexed _contract, bytes _msgPack);
+    function balanceOf(address _erc20, address _tokenOwner) public constant returns (uint balance) {
+        if(_erc20==address(0))
+            return address(this).balance;
+        return ERC20Interface(_erc20).balanceOf(_tokenOwner);
+    }
+    function min(uint256 _a, uint256 _b) private pure returns (uint256) {
+        if(_a>_b)
+            return _b;
+        return _a;
+    }
     function avatar(address _contract, bytes _msgPack) onlyStore(_contract) payable public {
         uint256 _price  = stores[_contract].price;
-        uint256 _value  = stores[_contract].erc20==address(0)?msg.value:ERC20Interface(stores[_contract].erc20).allowance(msg.sender,this);
-        require(_price==0||(_value==0&&stores[_contract].coupons[msg.sender][1]>0)||(_value>0&&_value==_price));
+        uint256 _value  = min(stores[_contract].erc20==address(0)?msg.value:ERC20Interface(stores[_contract].erc20).allowance(msg.sender,this),balanceOf(stores[_contract].erc20,msg.sender));
+        require(_price==0||(_value>0&&_value==_price)||(_value==0&&stores[_contract].coupons[msg.sender][1]>0));
 
         if(_price>0) {
             if(_value==0&&(stores[_contract].coupons[msg.sender][1]>0))
