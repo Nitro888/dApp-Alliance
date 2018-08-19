@@ -2,16 +2,22 @@ pragma solidity ^0.4.24;
 
 contract ERC20Interface {
     function balanceOf(address tokenOwner) public constant returns (uint balance);
+    function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
     function transfer(address to, uint tokens) public returns (bool success);
+    function approve(address spender, uint tokens) public returns (bool success);
+    function transferFrom(address from, address to, uint tokens) public returns (bool success);
 }
 
-contract SimplePay {
+contract _SimplePay {
     modifier onlyWallet() {
         require(isWallet());
         _;
     }
     function erc20() public constant returns (address);
     function isWallet() public constant returns (bool);
+
+    function payFromWallet(uint tokens, uint256[] options) payable public;
+    function payFromWallet(uint tokens, bytes _msgPack) payable public;
     function pay(uint tokens, uint256[] options) payable public;
     function pay(uint tokens, bytes _msgPack) payable public;
 }
@@ -48,30 +54,39 @@ contract Wallet {
     }
     // --------------------------------------------------------
 
-    // --------------------------------------------------------
-    // eth & erc20 interface
-    // --------------------------------------------------------
-    function balanceOf(address _erc20, address _tokenOwner) public constant returns (uint balance) {
+    //-------------------------------------------------------
+    // erc20 interface
+    //-------------------------------------------------------
+    function balanceOf(address _erc20) public constant returns (uint balance) {
         if(_erc20==address(0))
             return address(this).balance;
-        return ERC20Interface(_erc20).balanceOf(_tokenOwner);
+        return ERC20Interface(_erc20).balanceOf(this);
     }
-    function transfer(address _erc20, address _to, uint _tokens) public returns (bool success) {
-        require(balanceOf(_erc20,this)>=_tokens);
+    function transfer(address _erc20, address _to, uint _tokens) onlyOwner public returns (bool success) {
+        require(balanceOf(_erc20)>=_tokens);
         if(_erc20==address(0))
             _to.transfer(_tokens);
         else
             return ERC20Interface(_erc20).transfer(_to,_tokens);
         return true;
     }
+    function approve(address _erc20, address _spender, uint _tokens) onlyOwner public returns (bool success) {
+        if(_erc20==address(0))
+            return false;
+        return ERC20Interface(_erc20).approve(_spender,_tokens);
+    }
+
+    //-------------------------------------------------------
+    // pay interface
+    //-------------------------------------------------------
     function pay(address _store, uint _tokens, uint256[] _options) onlyOwner public {
-        address erc20 = SimplePay(_store).erc20();
+        address erc20 = _SimplePay(_store).erc20();
         transfer(erc20,_store,_tokens);
-        SimplePay(_store).pay(_tokens,_options);
+        _SimplePay(_store).payFromWallet(_tokens,_options);
     }
     function pay(address _store, uint _tokens, bytes _msgPack) onlyOwner public {
-        address erc20 = SimplePay(_store).erc20();
+        address erc20 = _SimplePay(_store).erc20();
         transfer(erc20,_store,_tokens);
-        SimplePay(_store).pay(_tokens,_msgPack);
+        _SimplePay(_store).payFromWallet(_tokens,_msgPack);
     }
 }

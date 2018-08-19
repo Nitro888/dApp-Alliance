@@ -230,7 +230,7 @@ contract Manager is SafeMath {
     function avatar(address _contract, bytes _msgPack) onlyStore(_contract) payable public {
         uint256 _price  = stores[_contract].price;
         uint256 _value  = min(stores[_contract].erc20==address(0)?msg.value:ERC20Interface(stores[_contract].erc20).allowance(msg.sender,this),balanceOf(stores[_contract].erc20,msg.sender));
-        require(_price==0||(_value>0&&_value==_price)||(_value==0&&stores[_contract].coupons[msg.sender][1]>0));
+        require(_price==0||(_value>0&&_value>=_price)||(_value==0&&stores[_contract].coupons[msg.sender][1]>0));
 
         if(_price>0) {
             if(_value==0&&(stores[_contract].coupons[msg.sender][1]>0))

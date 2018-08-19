@@ -221,7 +221,7 @@ contract Store is _Base, SafeMath {
     function buy(address _pack, uint256 _index) payable public {
         uint256 _price  = Pack(_pack).price(_index);
         uint256 _value  = min(erc20==address(0) ? msg.value : ERC20Interface(erc20).allowance(msg.sender,this),balanceOf(erc20,msg.sender));
-        require((_value>0&&_value==_price)||(_value==0&&coupons[msg.sender]>0));
+        require((_value>0&&_value>=_price)||(_value==0&&coupons[msg.sender]>0));
         require(Pack(_pack).canBuy(_index)&&Manager(manager).copyright(this));
 
         if(_value==0) {

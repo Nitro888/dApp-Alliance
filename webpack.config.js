@@ -8,6 +8,7 @@ module.exports = {
     //navbar : './src/navbar.js',
     //carousel: './src/carousel.js',
     www: './dist/src/www.js',
+    viewer: './dist/src/avatar/viewer.js'
   },
   output: {
     filename: '[name].min.js',
