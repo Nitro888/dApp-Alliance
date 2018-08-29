@@ -1,42 +1,6 @@
 pragma solidity ^0.4.24;
 
-contract ERC20Interface {
-    function balanceOf(address tokenOwner) public constant returns (uint balance);
-    function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
-    function transfer(address to, uint tokens) public returns (bool success);
-    function transferFrom(address from, address to, uint tokens) public returns (bool success);
-}
-
-contract SafeMath {
-    function safeAdd(uint a, uint b) public pure returns (uint c) {
-        c = a + b;
-        require(c >= a);
-    }
-    function safeSub(uint a, uint b) public pure returns (uint c) {
-        require(b <= a);
-        c = a - b;
-    }
-}
-
-contract _Base {
-    address internal                manager;
-
-    constructor(bytes _msgPack) public {
-        manager     = msg.sender;
-        emit INFO(_msgPack);
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender==Manager(manager).owner(this));
-        _;
-    }
-
-    // register information
-    event INFO(bytes _msgPack);
-    function info(bytes _msgPack) onlyOwner public {
-        emit INFO(_msgPack);
-    }
-}
+import "./Wallet.sol";
 
 contract Badge is _Base {
     constructor(bytes _msgPack) _Base(_msgPack) public {}
@@ -48,7 +12,7 @@ contract Badge is _Base {
     }
 }
 
-contract Avatar is _Base, SafeMath {
+contract Avatar is _Base, _ApproveAndCallFallBack, SafeMath {
     constructor(bytes _msgPack) _Base(_msgPack) public {}
     // register asset
     uint256                         index;
@@ -60,6 +24,24 @@ contract Avatar is _Base, SafeMath {
     event SETTING(bytes _msgPack);
     function setting(bytes _msgPack) onlyOwner public {
         emit SETTING(_msgPack);
+    }
+
+    // _ApproveAndCallFallBack
+    function erc20() public constant returns (address) {
+        bool    _copyright;
+        address _erc20;
+        (_copyright,_erc20) = Manager(manager).currency();
+        require(_copyright);
+        return _erc20;
+    }
+    function spender() public constant returns (address) {
+        return manager;
+    }
+    function receiveApproval(uint256[] _data) payable public {
+        revert();
+    }
+    function receiveApproval(bytes _msgPack) payable public {
+        Manager(manager).receiveApproval(msg.sender,_msgPack);
     }
 }
 
@@ -137,6 +119,17 @@ contract Manager is SafeMath {
         owners[_contract].owner = _next;
     }
 
+    // create Wallet
+    mapping(address=>bool)  wallets;
+    function wallet() public {
+        //Wallet
+        address temp    = new Wallet(msg.sender);
+        wallets[temp]   = true;
+    }
+    function isWallet(address _wallet) constant public returns (bool) {
+        return wallets[_wallet];
+    }
+
     // create badge
     function badge(bytes _msgPack) public {
         address temp    = new Badge(_msgPack);
@@ -183,6 +176,10 @@ contract Manager is SafeMath {
         stores[_contract].price   = _price;
         stores[_contract].stamp   = _stamp;
     }
+    function currency() constant public returns (bool,address) {
+        return (stores[msg.sender].copyright,
+                stores[msg.sender].erc20);
+    }
     function about(address _contract) constant public returns (address, bool, address, uint256, uint256, uint256, uint256[2]) {
         return (stores[_contract].owner,
                 stores[_contract].copyright,
@@ -217,34 +214,44 @@ contract Manager is SafeMath {
 
     // register Avatar
     event AVATAR (address indexed _user, address indexed _contract, bytes _msgPack);
-    function balanceOf(address _erc20, address _tokenOwner) public constant returns (uint balance) {
+    function balanceOf(address _erc20, address _tokenOwner) private constant returns (uint balance) {
         if(_erc20==address(0))
             return address(this).balance;
-        return ERC20Interface(_erc20).balanceOf(_tokenOwner);
+        return _ERC20Interface(_erc20).balanceOf(_tokenOwner);
     }
-    function min(uint256 _a, uint256 _b) private pure returns (uint256) {
+    function min(uint _a, uint _b) private pure returns (uint256) {
         if(_a>_b)
             return _b;
         return _a;
     }
-    function avatar(address _contract, bytes _msgPack) onlyStore(_contract) payable public {
-        uint256 _price  = stores[_contract].price;
-        uint256 _value  = min(stores[_contract].erc20==address(0)?msg.value:ERC20Interface(stores[_contract].erc20).allowance(msg.sender,this),balanceOf(stores[_contract].erc20,msg.sender));
-        require(_price==0||(_value>0&&_value>=_price)||(_value==0&&stores[_contract].coupons[msg.sender][1]>0));
-
+    function avatar(address _user, address _contract, uint256 _price, uint256 _value, bytes _msgPack) private {
         if(_price>0) {
-            if(_value==0&&(stores[_contract].coupons[msg.sender][1]>0))
-                burn(_contract, msg.sender, 1);
+            if(_value==0&&(stores[_contract].coupons[_user][1]>0))
+                burn(_contract, _user, 1);
             else {
-                stores[_contract].coupons[msg.sender][0]    = safeAdd(stores[_contract].coupons[msg.sender][0],1);
-                if(stores[_contract].stamp>0&&(stores[_contract].coupons[msg.sender][0]%stores[_contract].stamp)==0)
-                    mint(_contract,msg.sender,1);
+                stores[_contract].coupons[_user][0]    = safeAdd(stores[_contract].coupons[_user][0],1);
+                if(stores[_contract].stamp>0&&(stores[_contract].coupons[_user][0]%stores[_contract].stamp)==0)
+                    mint(_contract,_user,1);
                 if(stores[_contract].erc20==address(0))
                     stores[_contract].owner.transfer(_value);
                 else
-                    ERC20Interface(stores[_contract].erc20).transferFrom(msg.sender,stores[_contract].owner,_value);
+                    _ERC20Interface(stores[_contract].erc20).transferFrom(_user,stores[_contract].owner,_value);
             }
         }
-        emit AVATAR(msg.sender,_contract,_msgPack);
+        emit AVATAR(_user,_contract,_msgPack);
+    }
+    function receiveApproval(address _user, bytes _msgPack) onlyStore(msg.sender) payable public {
+        uint256 _price  = stores[msg.sender].price;
+        uint256 _value  = min(stores[msg.sender].erc20==address(0)?msg.value:_ERC20Interface(stores[msg.sender].erc20).allowance(_user,this),balanceOf(stores[msg.sender].erc20,_user));
+        require(_price==0||(_value>0&&_value>=_price)||(_value==0&&stores[msg.sender].coupons[_user][1]>0));
+
+        avatar(_user, msg.sender, _price, _value, _msgPack);
+    }
+    function avatar(address _contract, bytes _msgPack) onlyStore(_contract) payable public {
+        uint256 _price  = stores[_contract].price;
+        uint256 _value  = min(stores[_contract].erc20==address(0)?msg.value:_ERC20Interface(stores[_contract].erc20).allowance(msg.sender,this),balanceOf(stores[_contract].erc20,msg.sender));
+        require(_price==0||(_value>0&&_value>=_price)||(_value==0&&stores[_contract].coupons[msg.sender][1]>0));
+
+        avatar(msg.sender, _contract, _price, _value, _msgPack);
     }
 }
