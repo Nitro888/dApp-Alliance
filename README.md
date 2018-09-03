@@ -58,7 +58,10 @@ Select category, and select image asset. and write password and click cofirm but
 
 <img width="812" alt="8" src="https://user-images.githubusercontent.com/11692220/44976703-f1228680-afa0-11e8-995e-dc0b984cd02d.png">
 
-### 2.6. etc.
+### 2.6. setting.
+You can define the category name of your assets and the order of the layers in which the assets are drawn, and save them as JSON in the block chain. You can also disable the wrong assets and customize it by adding the information you want to JSON.
+
+<img width="812" alt="10" src="https://user-images.githubusercontent.com/11692220/44994061-dc151a00-afd7-11e8-81fa-39de1f422ace.png">
 
 ## 3. Digital contents store.
 ### 3.1. Create your contents store.
