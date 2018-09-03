@@ -8,9 +8,17 @@ And the stores will be able to set erc20 tokens to use, which will help develop 
 
 ## 1. Wallet
 ### 1.1. Create your ethereum wallet.
-Click + button at navigation bar. And write password twice and click enter button. After create wallet. A wallet JSON file will be downed in download folder.
+Click + button at navigation bar.
+
+<img width="589" alt="1" src="https://user-images.githubusercontent.com/11692220/44974849-d26dc100-af9b-11e8-9177-9ff1452e7091.png">
+
+And write password twice and click enter button. After create wallet. A wallet JSON file will be downed in download folder.
+
+<img width="528" alt="2" src="https://user-images.githubusercontent.com/11692220/44974914-047f2300-af9c-11e8-88ff-80f538766864.png">
 
 If you want to use this wallet. Click wallet icon and write password.
+
+<img width="534" alt="3" src="https://user-images.githubusercontent.com/11692220/44975001-41e3b080-af9c-11e8-9231-a387166b2c3b.png">
 
 ### 1.2. Create your Universal wallet. (for all erc20 tokens and ethereum)
 Universal wallet is a dapp that makes erc20 tokens available for commerce. Using standard interfaces between stores and wallets, we reduced calls to the contract from two to one.
@@ -24,14 +32,33 @@ After login, Click list button in input form for search your Universal wallet. a
 ### 2.1. Create your avatar store.
 After login, Click + button in input form for create your avatar store.
 
+<img width="657" alt="4" src="https://user-images.githubusercontent.com/11692220/44975088-7c4d4d80-af9c-11e8-85bd-7a4680444902.png">
+
+And write forms and avatar price and store currency(erc20 token).
+
+<img width="513" alt="5" src="https://user-images.githubusercontent.com/11692220/44975187-c5050680-af9c-11e8-9533-6e1a2911d704.png">
+
 ### 2.2. Search your avatar store.
 After login, Click list button in input form for search your avatar stores.
 
-### 2.3. upload your avatar asset to your store.
+<img width="515" alt="6" src="https://user-images.githubusercontent.com/11692220/44976524-6b064000-afa0-11e8-8a76-b3c6afa4eede.png">
 
-### 2.4. Make Avatar.
+### 2.3. Open avatar store.
+Click avatar button in input form for open avatar store.
 
-### 2.5. etc.
+<img width="652" alt="7" src="https://user-images.githubusercontent.com/11692220/44976526-6c376d00-afa0-11e8-8afd-fbb1e75cd885.png">
+
+### 2.4. Upload your avatar asset to your store.
+Select asset category, and select image asset. and write password and click cofirm button.
+
+<img width="812" alt="9" src="https://user-images.githubusercontent.com/11692220/44976704-f1bb1d00-afa0-11e8-873f-38de7e45558d.png">
+
+### 2.5. Make Avatar.
+Select category, and select image asset. and write password and click cofirm button.
+
+<img width="812" alt="8" src="https://user-images.githubusercontent.com/11692220/44976703-f1228680-afa0-11e8-995e-dc0b984cd02d.png">
+
+### 2.6. etc.
 
 ## 3. Digital contents store.
 ### 3.1. Create your contents store.
