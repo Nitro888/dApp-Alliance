@@ -176,7 +176,10 @@ let main = {
             inputs:[
               { input:false,key:'wallet',
                 title:'How to get a wallet.',
-                desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'}]
+                desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'},
+              { input:true,key:'erc20',
+                title:'How to get a erc20 universal wallet.',
+                desc:'After login, click <i class="fas fa-plus"></i> button.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:true,title:"AVATAR",image:'c1.jpg',
             inputs:[

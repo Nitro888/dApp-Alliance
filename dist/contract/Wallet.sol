@@ -70,6 +70,9 @@ contract Wallet {
     function undoTransferOwner() onlyOwner public {
         newOwner   = address(0);
     }
+    function isOwnner(address _who) constant public returns (bool) {
+        return owner==_who;
+    }
     // --------------------------------------------------------
 
     //-------------------------------------------------------
@@ -88,11 +91,12 @@ contract Wallet {
             return _ERC20Interface(_erc20).transfer(_to,_tokens);
         return true;
     }
-
     function approve(address _erc20, address _spender, uint _tokens) onlyOwner public returns (bool success) {
         require(_erc20 != address(0));
         return _ERC20Interface(_erc20).approve(_spender,_tokens);
     }
+    // todo
+    // approve cancel
 
     //-------------------------------------------------------
     // pay interface

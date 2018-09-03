@@ -7,6 +7,43 @@ contract Creator is _Base {
     function about() constant public returns(address,bool) {
         return (Manager(manager).owner(this),Manager(manager).copyright(this));
     }
+
+    function () public payable {}
+    //-------------------------------------------------------
+    // erc20 interface
+    //-------------------------------------------------------
+    function balanceOf(address _erc20) public constant returns (uint balance) {
+        if(_erc20==address(0))
+            return address(this).balance;
+        return _ERC20Interface(_erc20).balanceOf(this);
+    }
+    function transfer(address _erc20, address _to, uint _tokens) onlyOwner public returns (bool success) {
+        require(balanceOf(_erc20)>=_tokens);
+        if(_erc20==address(0))
+            _to.transfer(_tokens);
+        else
+            return _ERC20Interface(_erc20).transfer(_to,_tokens);
+        return true;
+    }
+    function approve(address _erc20, address _spender, uint _tokens) onlyOwner public returns (bool success) {
+        require(_erc20 != address(0));
+        return _ERC20Interface(_erc20).approve(_spender,_tokens);
+    }
+
+    //-------------------------------------------------------
+    // avatar
+    //-------------------------------------------------------
+    function avatar(address _store, uint _tokens, bytes _msgPack) onlyOwner public {
+        address erc20   = _ApproveAndCallFallBack(_store).erc20();
+        address spender = _ApproveAndCallFallBack(_store).spender();
+        if(erc20 == address(0)) {
+            transfer(erc20,spender,_tokens);
+            _ApproveAndCallFallBack(_store).receiveApproval(_msgPack);
+        } else {
+            _ERC20Interface(erc20).approve(spender,_tokens);
+            _ApproveAndCallFallBack(_store).receiveApproval(_msgPack);
+        }
+    }
 }
 
 contract Pack is _Base, _ApproveAndCallFallBack, SafeMath {
