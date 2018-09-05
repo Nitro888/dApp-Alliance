@@ -46,8 +46,9 @@ contract Avatar is _Base, _ApproveAndCallFallBack, SafeMath {
 }
 
 contract Manager is SafeMath {
+    enum CLASS       {NONE,WALLET,STORE,BADGE}
     struct _owner {
-        bool                            isBadge;
+        CLASS                           class;
         address                         owner;
     }
     struct _badge {
@@ -103,37 +104,41 @@ contract Manager is SafeMath {
     }
 
     // change Owner
+    event WALLET(address indexed _contract, address indexed _to, address indexed _from);
     event STORE(address indexed _contract, address indexed _to, address indexed _from);
     event BADGE(address indexed _contract, address indexed _to, address indexed _from);
     function owner(address _contract) constant public returns (address) {
         return owners[_contract].owner;
     }
     function newOwner(address _contract, address _next) onlyOwner(_contract) public {
-        if(owners[_contract].isBadge) {
-            emit BADGE(_contract,_next,stores[_contract].owner);
+        if(owners[_contract].class==CLASS.WALLET) {
+            emit WALLET(_contract,_next,owners[_contract].owner);
+            owners[_contract].owner = _next;
+        } else if(owners[_contract].class==CLASS.BADGE) {
+            emit BADGE(_contract,_next,owners[_contract].owner);
             badges[_contract].owner = _next;
-        } else {
-            emit STORE(_contract,_next,stores[_contract].owner);
+            owners[_contract].owner = _next;
+        } else if(owners[_contract].class==CLASS.STORE) {
+            emit STORE(_contract,_next,owners[_contract].owner);
             stores[_contract].owner = _next;
+            owners[_contract].owner = _next;
         }
-        owners[_contract].owner = _next;
     }
 
     // create Wallet
-    mapping(address=>bool)  wallets;
-    function wallet() public {
-        //Wallet
-        address temp    = new Wallet(msg.sender);
-        wallets[temp]   = true;
+    function wallet(bytes _msgPack) public {
+        address temp    = new Wallet(_msgPack);
+        owners[temp]    = _owner(CLASS.WALLET,msg.sender);
+        emit WALLET(temp,msg.sender,address(0));
     }
-    function isWallet(address _wallet) constant public returns (bool) {
-        return wallets[_wallet];
+    function isWallet(address _contract) constant public returns (address) {
+        return owners[_contract].class==CLASS.WALLET?owners[_contract].owner:address(0);
     }
 
     // create badge
     function badge(bytes _msgPack) public {
         address temp    = new Badge(_msgPack);
-        owners[temp]    = _owner(true,msg.sender);
+        owners[temp]    = _owner(CLASS.BADGE,msg.sender);
         badges[temp]    = _badge(msg.sender,msg.sender);
         emit BADGE(temp,msg.sender,address(0));
     }
@@ -166,7 +171,7 @@ contract Manager is SafeMath {
     event TOKEN(address indexed _contract, address indexed _erc20);
     function store(bytes _msgPack, address _erc20, uint256 _price, uint8 _stamp) public {
         address temp    = new Avatar(_msgPack);
-        owners[temp]    = _owner(false,msg.sender);
+        owners[temp]    = _owner(CLASS.STORE,msg.sender);
         stores[temp]    = _store(msg.sender,true,_erc20,_price,0,_stamp);
         emit STORE(temp,msg.sender,address(0));
         emit TOKEN(temp,_erc20);

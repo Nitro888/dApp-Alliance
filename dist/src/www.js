@@ -10,6 +10,7 @@ const editor  = require('./avatar/editor.js');
 editor.$children[0].wallet = navbar.wallet;
 
 //console.log(aMgr.manager);
+//console.log(aMgr.wallet);
 //console.log(aMgr.avatar);
 //console.log(aMgr.badge);
 //console.log(sMgr.manager);
@@ -177,7 +178,7 @@ let main = {
               { input:false,key:'wallet',
                 title:'How to get a wallet.',
                 desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'},
-              { input:true,key:'erc20',
+              { input:true,key:'universal wallet',
                 title:'How to get a erc20 universal wallet.',
                 desc:'After login, click <i class="fas fa-plus"></i> button.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
@@ -327,11 +328,12 @@ let main = {
           let address   = '';
           let data      = null;
           switch (this.contract.key) {
-            case 'avatar':  address   = aMgr.address; data = this._avatar(address,this._json(this.json),this._json(this.data)); break;
-            case 'badge':   address   = aMgr.address; data = this._badge(address,this._json(this.json),this._json(this.data)); break;
-            case 'store':   address   = sMgr.address; data = this._store(address,this._json(this.json),this._json(this.data));  break;
-            case 'pack':    address   = sMgr.address; data = this._pack(address,this._json(this.json),this._json(this.data));   break;
-            case 'creator': address   = sMgr.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
+            case 'universal wallet':  address   = aMgr.address; data = this._erc20Wallet(address,this._json(this.json),this._json(this.data)); break;
+            case 'avatar':            address   = aMgr.address; data = this._avatar(address,this._json(this.json),this._json(this.data)); break;
+            case 'badge':             address   = aMgr.address; data = this._badge(address,this._json(this.json),this._json(this.data)); break;
+            case 'store':             address   = sMgr.address; data = this._store(address,this._json(this.json),this._json(this.data));  break;
+            case 'pack':              address   = sMgr.address; data = this._pack(address,this._json(this.json),this._json(this.data));   break;
+            case 'creator':           address   = sMgr.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
           }
 
           //console.log(data);
@@ -341,7 +343,15 @@ let main = {
             this._sendTx(address,this.contract.password,0,data);
         }
       },
-
+      _erc20Wallet(address,json,data){
+        let result = null;
+        switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
+          case 0:
+            result  = this.wallet.contract[address].c.methods.wallet(this.wallet.web3.utils.bytesToHex(msgpack.encode(json))).encodeABI();
+            break;
+        }
+        return result;
+      },
       _avatar(address,json,data){
         let result = null;
         switch (this.contract.tab) {// 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
@@ -404,20 +414,23 @@ let main = {
         this.showModal("List of your "+key,"md",'dark','now loading...');
         let contract = {address:'',topic0:'',key:key};
         switch (key) {
+          case 'universal wallet':
+            contract  = {address:aMgr.address,topic0:aMgr.manager[27]['signature'],key:key};  // WALLET
+            break;
           case 'avatar':
-            contract  = {address:aMgr.address,topic0:aMgr.manager[21]['signature'],key:key};
+            contract  = {address:aMgr.address,topic0:aMgr.manager[28]['signature'],key:key};  // STORE
             break;
           case 'badge':
-            contract  = {address:aMgr.address,topic0:aMgr.manager[22]['signature'],key:key};
+            contract  = {address:aMgr.address,topic0:aMgr.manager[29]['signature'],key:key};  // BADGE
             break;
           case 'store':
-            contract  = {address:sMgr.address,topic0:sMgr.manager[13]['signature'],key:key};
+            contract  = {address:sMgr.address,topic0:sMgr.manager[13]['signature'],key:key};  // STORE
             break;
           case 'pack':
-            contract  = {address:sMgr.address,topic0:sMgr.manager[14]['signature'],key:key};
+            contract  = {address:sMgr.address,topic0:sMgr.manager[14]['signature'],key:key};  // PACK
             break;
           case 'creator':
-            contract  = {address:sMgr.address,topic0:sMgr.manager[12]['signature'],key:key};
+            contract  = {address:sMgr.address,topic0:sMgr.manager[12]['signature'],key:key};  // CREATOR
             break;
         }
         if(contract.address!='')
@@ -439,17 +452,26 @@ let main = {
 
         if(this.wallet.web3&&this.wallet.web3.utils.isAddress(address)) {
           switch (key) {
-            case 'avatar':  this.showAvatar(key,address,error,success); break;
-            case 'badge':   this.showBadge(key,address,error,success); break;
-            case 'store':   this.showStore(key,address,error,success); break;
-            case 'pack':    this.showPack(key,address,error,success); break;
-            case 'creator': this.showCreator(key,address,error,success); break;
+            case 'universal wallet':  this.showErc20Wallet(key,address,error,success); break;
+            case 'avatar':            this.showAvatar(key,address,error,success); break;
+            case 'badge':             this.showBadge(key,address,error,success); break;
+            case 'store':             this.showStore(key,address,error,success); break;
+            case 'pack':              this.showPack(key,address,error,success); break;
+            case 'creator':           this.showCreator(key,address,error,success); break;
           }
         } else if(address=='')
           this.$refs.refModalContract.show();
       },
+      showErc20Wallet(key,address,error=null,success=null) {
+        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.isWallet(address),aMgr.wallet[8],
+          (r,json)=>{
+            this.data.owner = r;
+            if(!success)
+              this.$refs.refModalContract.show();
+        });
+      },
       showAvatar(key,address,error=null,success=null) {
-        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.about(address),aMgr.avatar[8],
+        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.about(address),aMgr.avatar[15],
           (r,json)=>{
             this.data.owner = r[0];
             this.data.erc20 = r[2];
@@ -470,7 +492,7 @@ let main = {
       },
       showStore(key,address,error=null,success=null) {
         let temp = new this.wallet.web3.eth.Contract(sMgr.store,address);
-        this._showContract(key,address,temp.methods.about(),sMgr.store[14],
+        this._showContract(key,address,temp.methods.about(),sMgr.store[16],
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright
@@ -481,7 +503,7 @@ let main = {
       },
       showPack(key,address,error=null,success=null) {
         let temp = new this.wallet.web3.eth.Contract(sMgr.pack,address);
-        this._showContract(key,address,temp.methods.about(),sMgr.pack[22],
+        this._showContract(key,address,temp.methods.about(),sMgr.pack[27],
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright
@@ -491,7 +513,7 @@ let main = {
       },
       showCreator(key,address,error=null,success=null) {
         let temp = new this.wallet.web3.eth.Contract(sMgr.creator,address);
-        this._showContract(key,address,temp.methods.about(),sMgr.creator[3],
+        this._showContract(key,address,temp.methods.about(),sMgr.creator[8],
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright

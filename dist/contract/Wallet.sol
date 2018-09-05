@@ -27,6 +27,30 @@ contract _ERC20Interface {
     function transferFrom(address from, address to, uint tokens) public returns (bool success);
 }
 
+contract _Manager {
+    function owner(address _contract) constant public returns (address);
+}
+contract _Base {
+    address internal                manager;
+
+    constructor(bytes _msgPack) public {
+        manager     = msg.sender;
+        emit INFO(_msgPack);
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender==_Manager(manager).owner(this));
+        _;
+    }
+
+    // register information
+    event INFO(bytes _msgPack);
+    function info(bytes _msgPack) onlyOwner public {
+        emit INFO(_msgPack);
+    }
+}
+
+
 contract _ApproveAndCallFallBack {
     function () public payable {revert();}  // Don't accept ETH
     function erc20() public constant returns (address);
@@ -35,54 +59,10 @@ contract _ApproveAndCallFallBack {
     function receiveApproval(bytes _msgPack) payable public;
 }
 
-contract Wallet {
-    address public                          owner;
-    address public                          newOwner;
-    mapping (address => uint256) private    allowed;
+contract Wallet is _Base {
 
-    event OWNER(address indexed _from, address indexed _to);
-    constructor(address _owner) public {
-        if(_owner==address(0))
-            owner     = msg.sender;
-        else
-            owner     = _owner;
-        emit OWNER(address(0),owner);
-    }
+    constructor(bytes _msgPack) _Base(_msgPack) public {}
     function () public payable {}
-
-    modifier onlyOwner() {
-        require(msg.sender == owner);
-        _;
-    }
-
-    // --------------------------------------------------------
-    // owership transfer
-    // --------------------------------------------------------
-    function transferOwner(address _next) onlyOwner public {
-        newOwner = _next;
-    }
-    function confirmTransferOwner() public {
-        require(msg.sender == newOwner);
-        emit OWNER(owner, newOwner);
-        owner       = newOwner;
-        newOwner   = address(0);
-    }
-    function undoTransferOwner() onlyOwner public {
-        newOwner   = address(0);
-    }
-    function isOwnner(address _who) constant public returns (bool) {
-        return owner==_who;
-    }
-    // --------------------------------------------------------
-
-    // --------------------------------------------------------
-    // register information
-    // --------------------------------------------------------
-    event INFO(bytes _msgPack);
-    function info(bytes _msgPack) onlyOwner public {
-        emit INFO(_msgPack);
-    }
-    // --------------------------------------------------------
 
     //-------------------------------------------------------
     // erc20 interface
@@ -104,7 +84,8 @@ contract Wallet {
         require(_erc20 != address(0));
         return _ERC20Interface(_erc20).approve(_spender,_tokens);
     }
-    // todo
+    // todo?
+    // mapping (address => uint256) private    allowed;
     // approve cancel
 
     //-------------------------------------------------------
@@ -131,28 +112,5 @@ contract Wallet {
             _ERC20Interface(erc20).approve(spender,_tokens);
             _ApproveAndCallFallBack(_store).receiveApproval(_msgPack);
         }
-    }
-}
-
-contract _Manager {
-    function owner(address _contract) constant public returns (address);
-}
-contract _Base {
-    address internal                manager;
-
-    constructor(bytes _msgPack) public {
-        manager     = msg.sender;
-        emit INFO(_msgPack);
-    }
-
-    modifier onlyOwner() {
-        require(msg.sender==_Manager(manager).owner(this));
-        _;
-    }
-
-    // register information
-    event INFO(bytes _msgPack);
-    function info(bytes _msgPack) onlyOwner public {
-        emit INFO(_msgPack);
     }
 }
