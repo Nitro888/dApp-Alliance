@@ -1,10 +1,11 @@
 # nitro888.github.io
 ## Decentralized Avatar and Digital Contents Store solution.
 ### Universal wallet. (for all erc20 tokens and ethereum)
+Universal wallet is a dapp that makes erc20 tokens available for commerce. Using standard interfaces between stores and wallets, we reduced calls to the contract from two to one.
 
 ![wallet](https://user-images.githubusercontent.com/11692220/45146088-1b708000-b1fd-11e8-9b57-30ea7491de0b.png)
 
-### Avatar & Badge System
+### Avatar & Badge System.
 It is an ethereum address based avatar dapp that can be used in other services using ethereum or dapps. This is a decentralized dapp that create avatar store dapp, does not makes avatar directly. You can use this decentralized dapp to create your own avatar store without any restrictions, and created   avatars can implement a service, and can shows avatars on all services that use the ethereum address. So with dapp, you can make your service more user friendly, and avatars will make the Etherium ecosystem richer too.
 
 Unlike most dapps, which are self-centered, as opposed to decentralization, avatars dapp has been developed with the goal of being available to other services and dapps.
@@ -28,12 +29,18 @@ If you want to use this wallet. Click wallet icon and write password.
 <img width="534" alt="3" src="https://user-images.githubusercontent.com/11692220/44975001-41e3b080-af9c-11e8-9231-a387166b2c3b.png">
 
 ### 1.2. Create your Universal wallet. (for all erc20 tokens and ethereum)
-Universal wallet is a dapp that makes erc20 tokens available for commerce. Using standard interfaces between stores and wallets, we reduced calls to the contract from two to one.
-
 After login, Click + button in input form for create universal wallet.
+
+<img width="549" alt="1" src="https://user-images.githubusercontent.com/11692220/45160918-9d749f00-b225-11e8-84c4-c36ab45d112d.png">
+
+And write forms.
+
+<img width="515" alt="2" src="https://user-images.githubusercontent.com/11692220/45161025-d6147880-b225-11e8-9db3-b8e31daeb8b7.png">
 
 ### 1.3. Search your Universal wallet. (for all erc20 tokens and ethereum)
 After login, Click list button in input form for search your Universal wallet. and you can see your universal wallets.
+
+<img width="520" alt="3" src="https://user-images.githubusercontent.com/11692220/45161070-f2b0b080-b225-11e8-852a-9307ffb1b8c1.png">
 
 ## 2. Avatar
 ### 2.1. Create your avatar store.
