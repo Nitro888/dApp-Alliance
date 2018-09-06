@@ -1,10 +1,15 @@
 # nitro888.github.io
 ## Decentralized Avatar and Digital Contents Store solution.
+### Universal wallet. (for all erc20 tokens and ethereum)
+
+### Avatar & Badge System
 It is an ethereum address based avatar dapp that can be used in other services using ethereum or dapps. This is a decentralized dapp that create avatar store dapp, does not makes avatar directly. You can use this decentralized dapp to create your own avatar store without any restrictions, and created   avatars can implement a service, and can shows avatars on all services that use the ethereum address. So with dapp, you can make your service more user friendly, and avatars will make the Etherium ecosystem richer too.
 
 Unlike most dapps, which are self-centered, as opposed to decentralization, avatars dapp has been developed with the goal of being available to other services and dapps.
 
 And the stores will be able to set erc20 tokens to use, which will help develop the Etherium ecosystem.
+
+![avatar](https://user-images.githubusercontent.com/11692220/45139388-8c5a6c80-b1ea-11e8-913e-53efae066395.png)
 
 ## 1. Wallet
 ### 1.1. Create your ethereum wallet.
