@@ -230,6 +230,14 @@ let wallet	= new function() {
 		};
 		xhr.open("GET", url, true);
 		xhr.send();
+	},
+
+	// abi
+	this.findABI = function(abi,name) {
+		let found = abi.find(obj=> {return obj.name==name;});
+		if(!found)
+			return null;
+		return found;
 	}
 }
 

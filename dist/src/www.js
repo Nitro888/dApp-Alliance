@@ -6,7 +6,7 @@ navbar.wallet.pushContract(aMgr.manager,aMgr.address);
 const sMgr  = require('./abi/store.js');
 navbar.wallet.pushContract(sMgr.manager,sMgr.address);
 
-const editor  = require('./avatar/editor.js');
+const editor= require('./avatar/editor.js');
 editor.$children[0].wallet = navbar.wallet;
 
 //console.log(aMgr.manager);
@@ -19,6 +19,18 @@ editor.$children[0].wallet = navbar.wallet;
 //console.log(sMgr.pack);
 
 //console.log(editor);
+
+const KEYS  = {
+  'WALLET'        : {'KEY':'WALLET',        'TITLE':'Wallet'},
+  'ERC20WALLET'   : {'KEY':'ERC20WALLET',   'TITLE':'Erc20 universal wallet'},
+  'STORE_AVATAR'  : {'KEY':'STORE_AVATAR',  'TITLE':'Avatar store'},
+  'BADGE'         : {'KEY':'BADGE',         'TITLE':'Badge'},
+  'STORE_CONTENTS': {'KEY':'STORE_CONTENTS','TITLE':'Contents store'},
+  'CREATOR'       : {'KEY':'CREATOR',       'TITLE':'Contents creator'},
+  'PACK'          : {'KEY':'PACK',          'TITLE':'Contents pack'},
+  'TICKET'        : {'KEY':'TICKET',        'TITLE':'Ticket store'},
+  'CASINO'        : {'KEY':'CASINO',        'TITLE':'Casino'}
+};
 
 let main = {
   template: `
@@ -66,7 +78,7 @@ let main = {
           <b-nav-item :active="contract.tab==0" :disabled="contract.address!=''||!isLogedIn" v-on:click="contract.tab=0;"><i class="fas fa-plus"></i></b-nav-item>
           <b-nav-item :active="contract.tab==1" :disabled="contract.address==''||!isOwner" v-on:click="contract.tab=1;"><i class="fas fa-exchange-alt"></i></b-nav-item>
           <b-nav-item :active="contract.tab==2" :disabled="contract.address==''||!isOwner||!isPack" v-on:click="contract.tab=2;"><i class="fas fa-store"></i></b-nav-item>
-          <b-nav-item :active="contract.tab==3" :disabled="contract.address==''||!isOwner||isStore||isCreator" v-on:click="contract.tab=3;"><i class="fas fa-file-invoice-dollar"></i></b-nav-item>
+          <b-nav-item :active="contract.tab==3" :disabled="contract.address==''||!isOwner||isStore||isCreator||isErc20Wallet" v-on:click="contract.tab=3;"><i class="fas fa-file-invoice-dollar"></i></b-nav-item>
           <b-nav-item :active="contract.tab==4" :disabled="contract.address==''||!isOwner" v-on:click="contract.tab=4;"><i class="fas fa-file-signature"></i></b-nav-item>
           <b-nav-item :active="contract.tab==5" :disabled="contract.address==''" v-on:click="contract.tab=5;"><i class="fas fa-info"></i></b-nav-item>
         </b-nav>
@@ -175,45 +187,45 @@ let main = {
         contents:[
           {left:false,title:"WALLET",image:'c0.jpg',
             inputs:[
-              { input:false,key:'wallet',
+              { input:false,key:KEYS['WALLET']['KEY'],
                 title:'How to get a wallet.',
                 desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'},
-              { input:true,key:'universal wallet',
+              { input:true,key:KEYS['ERC20WALLET']['KEY'],
                 title:'How to get a erc20 universal wallet.',
                 desc:'After login, click <i class="fas fa-plus"></i> button.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:true,title:"AVATAR",image:'c1.jpg',
             inputs:[
-              { input:true,key:'avatar',
+              { input:true,key:KEYS['STORE_AVATAR']['KEY'],
                 title:'How to get your avatar store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write avatar store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
-              { input:true,key:'badge',
+              { input:true,key:KEYS['BADGE']['KEY'],
                 title:'How to get your badge store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write badge store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:false,title:"STORE",image:'c2.jpg',
             inputs:[
-              { input:true,key:'store',
+              { input:true,key:KEYS['STORE_CONTENTS']['KEY'],
                 title:'How to get your digital contents store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
-              { input:true,key:'pack',
+              { input:true,key:KEYS['PACK']['KEY'],
                 title:'How to create digital contents pack at store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write pack name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:true,title:"CREATOR",image:'c3.jpg',
             inputs:[
-              { input:true,key:'creator',
+              { input:true,key:KEYS['CREATOR']['KEY'],
                 title:'How to get contents creator account.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:false,title:"TICKET",image:'c4.jpg',
             inputs:[
-              { input:false,key:'ticket',
+              { input:false,key:KEYS['TICKET']['KEY'],
                 title:'Create ticket booth for yours.',
                 desc:'Coming soon.'}]},
           {left:true,title:"CASINO",image:'c5.jpg',
             inputs:[
-              { input:false,key:'casino',
+              { input:false,key:KEYS['CASINO']['KEY'],
                 title:'Create your own casino and play.',
                 desc:'Coming soon.'}]},
         ]
@@ -238,29 +250,32 @@ let main = {
       isAddressErc20: function () {
         return this.data.erc20==''||this.wallet.web3.utils.isAddress(this.data.erc20);
       },
+      isErc20Wallet : function () {
+        return this.contract.key==KEYS['ERC20WALLET']['KEY'];
+      },
       isStore : function () {
-        return this.contract.key=='store';
+        return this.contract.key==KEYS['STORE_CONTENTS']['KEY'];
       },
       isPack : function () {
-        return this.contract.key=='pack';
+        return this.contract.key==KEYS['PACK']['KEY'];
       },
       isCreator : function () {
-        return this.contract.key=='creator';
+        return this.contract.key==KEYS['CREATOR']['KEY'];
       },
       showErc20 : function () {
-        return this.contract.key=='avatar'||this.contract.key=='store';
+        return this.contract.key==KEYS['STORE_AVATAR']['KEY']||this.contract.key==KEYS['STORE_CONTENTS']['KEY'];
       },
       showPrice : function () {
-        return this.contract.key=='avatar';
+        return this.contract.key==KEYS['STORE_AVATAR']['KEY'];
       },
       showStamp : function () {
-        return this.contract.key=='avatar';
+        return this.contract.key==KEYS['STORE_AVATAR']['KEY'];
       },
       showShare : function () {
-        return this.contract.key=='pack';
+        return this.contract.key==KEYS['PACK']['KEY'];
       },
       showShareStart : function () {
-        return this.contract.key=='pack';
+        return this.contract.key==KEYS['PACK']['KEY'];
       }
     },
     methods: {
@@ -328,12 +343,12 @@ let main = {
           let address   = '';
           let data      = null;
           switch (this.contract.key) {
-            case 'universal wallet':  address   = aMgr.address; data = this._erc20Wallet(address,this._json(this.json),this._json(this.data)); break;
-            case 'avatar':            address   = aMgr.address; data = this._avatar(address,this._json(this.json),this._json(this.data)); break;
-            case 'badge':             address   = aMgr.address; data = this._badge(address,this._json(this.json),this._json(this.data)); break;
-            case 'store':             address   = sMgr.address; data = this._store(address,this._json(this.json),this._json(this.data));  break;
-            case 'pack':              address   = sMgr.address; data = this._pack(address,this._json(this.json),this._json(this.data));   break;
-            case 'creator':           address   = sMgr.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
+            case KEYS['ERC20WALLET']['KEY']:    address   = aMgr.address; data = this._erc20Wallet(address,this._json(this.json),this._json(this.data)); break;
+            case KEYS['STORE_AVATAR']['KEY']:   address   = aMgr.address; data = this._avatar(address,this._json(this.json),this._json(this.data)); break;
+            case KEYS['BADGE']['KEY']:          address   = aMgr.address; data = this._badge(address,this._json(this.json),this._json(this.data)); break;
+            case KEYS['STORE_CONTENTS']['KEY']: address   = sMgr.address; data = this._store(address,this._json(this.json),this._json(this.data));  break;
+            case KEYS['PACK']['KEY']:           address   = sMgr.address; data = this._pack(address,this._json(this.json),this._json(this.data));   break;
+            case KEYS['CREATOR']['KEY']:        address   = sMgr.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
           }
 
           //console.log(data);
@@ -411,34 +426,41 @@ let main = {
       },
       //------------------------------------------------------------------------------------------------
       showContractList(key) {
-        this.showModal("List of your "+key,"md",'dark','now loading...');
+        this.showModal("List of your "+KEYS[key]['TITLE'],"md",'dark','now loading...');
         let contract = {address:'',topic0:'',key:key};
         switch (key) {
-          case 'universal wallet':
-            contract  = {address:aMgr.address,topic0:aMgr.manager[27]['signature'],key:key};  // WALLET
+          case KEYS['ERC20WALLET']['KEY']:
+            contract['address'] = aMgr.address;
+            contract['topic0']  = this.wallet.findABI(aMgr.manager,'WALLET')['signature'];
             break;
-          case 'avatar':
-            contract  = {address:aMgr.address,topic0:aMgr.manager[28]['signature'],key:key};  // STORE
+          case KEYS['STORE_AVATAR']['KEY']:
+            contract['address'] = aMgr.address;
+            contract['topic0']  = this.wallet.findABI(aMgr.manager,'STORE')['signature'];
             break;
-          case 'badge':
-            contract  = {address:aMgr.address,topic0:aMgr.manager[29]['signature'],key:key};  // BADGE
+          case KEYS['BADGE']['KEY']:
+            contract['address'] = aMgr.address;
+            contract['topic0']  = this.wallet.findABI(aMgr.manager,'BADGE')['signature'];
             break;
-          case 'store':
-            contract  = {address:sMgr.address,topic0:sMgr.manager[13]['signature'],key:key};  // STORE
+          case KEYS['STORE_CONTENTS']['KEY']:
+            contract['address'] = sMgr.address;
+            contract['topic0']  = this.wallet.findABI(sMgr.manager,'STORE')['signature'];
             break;
-          case 'pack':
-            contract  = {address:sMgr.address,topic0:sMgr.manager[14]['signature'],key:key};  // PACK
+          case KEYS['PACK']['KEY']:
+            contract['address'] = sMgr.address;
+            contract['topic0']  = this.wallet.findABI(sMgr.manager,'PACK')['signature'];
             break;
-          case 'creator':
-            contract  = {address:sMgr.address,topic0:sMgr.manager[12]['signature'],key:key};  // CREATOR
+          case KEYS['CREATOR']['KEY']:
+            contract['address'] = sMgr.address;
+            contract['topic0']  = this.wallet.findABI(sMgr.manager,'CREATOR')['signature'];
             break;
         }
-        if(contract.address!='')
+
+        if(contract['address']!=''&&contract['topic0'])
           this._searchOwner(contract,(list)=>{this.updateModal(list.length==0?'Empty':'',list);});
       },
       //------------------------------------------------------------------------------------------------
       showContract(key,address,error=null,success=null) {
-        this.contract.title       = (address==''?"Create ":"Contract ")+key;
+        this.contract.title       = (address==''?"Create ":"Contract ")+KEYS[key]['TITLE'];
         this.contract.address     = address;
         this.contract.link        = this.wallet.web3.utils.isAddress(address)?this.wallet.option['network']['href']+"/address/"+address:'#';
         this.contract.communities = false;
@@ -452,18 +474,18 @@ let main = {
 
         if(this.wallet.web3&&this.wallet.web3.utils.isAddress(address)) {
           switch (key) {
-            case 'universal wallet':  this.showErc20Wallet(key,address,error,success); break;
-            case 'avatar':            this.showAvatar(key,address,error,success); break;
-            case 'badge':             this.showBadge(key,address,error,success); break;
-            case 'store':             this.showStore(key,address,error,success); break;
-            case 'pack':              this.showPack(key,address,error,success); break;
-            case 'creator':           this.showCreator(key,address,error,success); break;
+            case KEYS['ERC20WALLET']['KEY']:    this.showErc20Wallet(key,address,error,success); break;
+            case KEYS['STORE_AVATAR']['KEY']:   this.showAvatar(key,address,error,success); break;
+            case KEYS['BADGE']['KEY']:          this.showBadge(key,address,error,success); break;
+            case KEYS['STORE_CONTENTS']['KEY']: this.showStore(key,address,error,success); break;
+            case KEYS['PACK']['KEY']:           this.showPack(key,address,error,success); break;
+            case KEYS['CREATOR']['KEY']:        this.showCreator(key,address,error,success); break;
           }
         } else if(address=='')
           this.$refs.refModalContract.show();
       },
       showErc20Wallet(key,address,error=null,success=null) {
-        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.isWallet(address),aMgr.wallet[8],
+        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.isWallet(address),this.wallet.findABI(aMgr.wallet,'INFO'),
           (r,json)=>{
             this.data.owner = r;
             if(!success)
@@ -471,7 +493,7 @@ let main = {
         });
       },
       showAvatar(key,address,error=null,success=null) {
-        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.about(address),aMgr.avatar[15],
+        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.about(address),this.wallet.findABI(aMgr.avatar,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             this.data.erc20 = r[2];
@@ -482,7 +504,7 @@ let main = {
         });
       },
       showBadge(key,address,error=null,success=null) {
-        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.status(address,this.wallet.address()),aMgr.badge[4],
+        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.status(address,this.wallet.address()),this.wallet.findABI(aMgr.badge,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             //this.data.updater = r[1];
@@ -492,7 +514,7 @@ let main = {
       },
       showStore(key,address,error=null,success=null) {
         let temp = new this.wallet.web3.eth.Contract(sMgr.store,address);
-        this._showContract(key,address,temp.methods.about(),sMgr.store[16],
+        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(sMgr.store,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright
@@ -503,7 +525,7 @@ let main = {
       },
       showPack(key,address,error=null,success=null) {
         let temp = new this.wallet.web3.eth.Contract(sMgr.pack,address);
-        this._showContract(key,address,temp.methods.about(),sMgr.pack[27],
+        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(sMgr.pack,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright
@@ -513,7 +535,7 @@ let main = {
       },
       showCreator(key,address,error=null,success=null) {
         let temp = new this.wallet.web3.eth.Contract(sMgr.creator,address);
-        this._showContract(key,address,temp.methods.about(),sMgr.creator[8],
+        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(sMgr.creator,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright
@@ -521,7 +543,9 @@ let main = {
               this.$refs.refModalContract.show();
         });
       },
-      _showContract(key,address,contract,abi,callback=null) {
+      _showContract(key,address,contract,abi=null,callback=null) {
+        if(!abi)
+          return;
         contract.call((e,r)=>{
           if(e==null){
             let topics    = 'topic0='+this.wallet.web3.eth.abi.encodeEventSignature(abi);
@@ -558,7 +582,7 @@ Vue.component('content-sub',{
                     </b-input-group-prepend>
                     <b-form-input type="text" placeholder="contract adress" v-model="address"></b-form-input>
                     <b-input-group-append>
-                      <b-btn size="sm" variant="outline-primary" v-if="sub.key=='avatar'" v-on:click="showAvatarEditor()"><i class="fas fa-user-circle"></i></b-btn>
+                      <b-btn size="sm" variant="outline-primary" v-if="sub.key==KEYS['STORE_AVATAR']['KEY']" v-on:click="showAvatarEditor()"><i class="fas fa-user-circle"></i></b-btn>
                       <b-btn size="sm" variant="outline-primary" v-on:click="about()"><i class="fas fa-info"></i></b-btn>
                     </b-input-group-append>
                   </b-input-group>
@@ -566,6 +590,7 @@ Vue.component('content-sub',{
               </div>`,
     data () {
       return {
+          KEYS:KEYS,
           wallet:navbar.wallet,
           address:''
       }
