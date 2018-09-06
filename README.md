@@ -2,6 +2,8 @@
 ## Decentralized Avatar and Digital Contents Store solution.
 ### Universal wallet. (for all erc20 tokens and ethereum)
 
+![wallet](https://user-images.githubusercontent.com/11692220/45146088-1b708000-b1fd-11e8-9b57-30ea7491de0b.png)
+
 ### Avatar & Badge System
 It is an ethereum address based avatar dapp that can be used in other services using ethereum or dapps. This is a decentralized dapp that create avatar store dapp, does not makes avatar directly. You can use this decentralized dapp to create your own avatar store without any restrictions, and created   avatars can implement a service, and can shows avatars on all services that use the ethereum address. So with dapp, you can make your service more user friendly, and avatars will make the Etherium ecosystem richer too.
 
