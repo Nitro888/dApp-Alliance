@@ -16,7 +16,7 @@ And the stores will be able to set erc20 tokens to use, which will help develop 
 
 ## 1. Wallet
 ### 1.1. Create your ethereum wallet.
-Click + button at navigation bar.
+Click **+ button** at navigation bar.
 
 <img width="589" alt="1" src="https://user-images.githubusercontent.com/11692220/44974849-d26dc100-af9b-11e8-9177-9ff1452e7091.png">
 
@@ -24,13 +24,11 @@ And write password twice and click enter button. After create wallet. A wallet J
 
 <img width="528" alt="2" src="https://user-images.githubusercontent.com/11692220/44974914-047f2300-af9c-11e8-88ff-80f538766864.png">
 
-If you want to use this wallet. Click wallet icon and write password.
+If you want to use this wallet. Click **wallet icon** and write password.
 
 <img width="534" alt="3" src="https://user-images.githubusercontent.com/11692220/44975001-41e3b080-af9c-11e8-9231-a387166b2c3b.png">
 
 ### 1.2. Create your Universal wallet. (for all erc20 tokens and ethereum)
-After login, Click + button in input form for create universal wallet.
-
 <img width="549" alt="1" src="https://user-images.githubusercontent.com/11692220/45160918-9d749f00-b225-11e8-84c4-c36ab45d112d.png">
 
 And write forms.
@@ -38,14 +36,12 @@ And write forms.
 <img width="515" alt="2" src="https://user-images.githubusercontent.com/11692220/45161025-d6147880-b225-11e8-9db3-b8e31daeb8b7.png">
 
 ### 1.3. Search your Universal wallet. (for all erc20 tokens and ethereum)
-After login, Click list button in input form for search your Universal wallet. and you can see your universal wallets.
+After login, Click **list button** in input form for search your Universal wallet. and you can see your universal wallets.
 
 <img width="520" alt="3" src="https://user-images.githubusercontent.com/11692220/45161070-f2b0b080-b225-11e8-852a-9307ffb1b8c1.png">
 
 ## 2. Avatar
 ### 2.1. Create your avatar store.
-After login, Click + button in input form for create your avatar store.
-
 <img width="657" alt="4" src="https://user-images.githubusercontent.com/11692220/44975088-7c4d4d80-af9c-11e8-85bd-7a4680444902.png">
 
 And write forms and avatar price and store currency(erc20 token).
@@ -53,12 +49,12 @@ And write forms and avatar price and store currency(erc20 token).
 <img width="513" alt="5" src="https://user-images.githubusercontent.com/11692220/44975187-c5050680-af9c-11e8-9533-6e1a2911d704.png">
 
 ### 2.2. Search your avatar store.
-After login, Click list button in input form for search your avatar stores.
+After login, Click **list button** in input form for search your avatar stores.
 
 <img width="515" alt="6" src="https://user-images.githubusercontent.com/11692220/44976524-6b064000-afa0-11e8-8a76-b3c6afa4eede.png">
 
 ### 2.3. Open avatar store.
-Click avatar button in input form for open avatar store.
+Click **avatar button** in input form for open avatar store.
 
 <img width="652" alt="7" src="https://user-images.githubusercontent.com/11692220/44976526-6c376d00-afa0-11e8-8afd-fbb1e75cd885.png">
 
@@ -79,10 +75,10 @@ You can define the category name of your assets and the order of the layers in w
 
 ## 3. Digital contents store.
 ### 3.1. Create your contents store.
-After login, Click + button in input form for create your contents store.
+After login, Click **+ button** in input form for create your contents store.
 
 ### 3.2. Create your contents creator contract.
-After login, Click + button in input form for create your contents creator contract.
+After login, Click **+ button** in input form for create your contents creator contract.
 
 ### 3.3. Create contest pack for creator.
-After login, Click + button in input form for create contest pack for creator.
+After login, Click **+ button** in input form for create contest pack for creator.
