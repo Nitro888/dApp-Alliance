@@ -29,7 +29,7 @@ If you want to use this wallet. Click **wallet icon** and write password.
 <img width="534" alt="3" src="https://user-images.githubusercontent.com/11692220/44975001-41e3b080-af9c-11e8-9231-a387166b2c3b.png">
 
 ## 1.2. Create your Universal wallet. (for all erc20 tokens and ethereum)
-<img width="549" alt="1" src="https://user-images.githubusercontent.com/11692220/45160918-9d749f00-b225-11e8-84c4-c36ab45d112d.png">
+<img width="942" alt="1" src="https://user-images.githubusercontent.com/11692220/45196852-3e507200-b299-11e8-8373-effbdcbfbcdd.png">
 
 And write forms.
 
@@ -42,7 +42,7 @@ After login, Click **list button** in input form for search your Universal walle
 
 # 2. Avatar
 ## 2.1. Create your avatar store.
-<img width="657" alt="4" src="https://user-images.githubusercontent.com/11692220/44975088-7c4d4d80-af9c-11e8-85bd-7a4680444902.png">
+<img width="940" alt="2" src="https://user-images.githubusercontent.com/11692220/45196876-50caab80-b299-11e8-95f0-a2f5e5ceb003.png">
 
 And write forms and avatar price and store currency(erc20 token).
 
