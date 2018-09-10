@@ -1,5 +1,5 @@
 const conf = {
-  manager   : '0x79b235969fc227bbb08ad4a67504c7750f4976a1',
+  manager   : '0xd8ad700681e765ccaf8fb855036641e72f01cbf5',
   avatarLog : {"anonymous":false,"inputs":[{"indexed":true,"name":"_user","type":"address"},{"indexed":true,"name":"_contract","type":"address"},{"indexed":false,"name":"_msgPack","type":"bytes"}],"name":"AVATAR","type":"event"},
   badgeLog  : {"anonymous":false,"inputs":[{"indexed":true,"name":"_index","type":"uint8"},{"indexed":false,"name":"_title","type":"string"},{"indexed":false,"name":"_img","type":"bytes"}],"name":"ASSET","type":"event"},
   settingLog: {"anonymous":false,"inputs":[{"indexed":false,"name":"_msgPack","type":"bytes"}],"name":"SETTING","type":"event"},
