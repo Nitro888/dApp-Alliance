@@ -1,3 +1,4 @@
+var slider  = require('vue-color/src/components/Slider.vue');
 let avatar  = require('./view.js');
 const aMgr  = require('../abi/avatar.js');
 
@@ -37,6 +38,7 @@ let editor = {
             <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.value" :active="avatar.active==item.value.toString()" v-on:click="avatar.active=item.value.toString();">{{item.text}}</b-nav-item>
           </b-nav>
           <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height1+'px','background-color':'gray'}">
+            <slider-picker v-for='color in avatar.tab' v-bind:key="color.value" v-show="avatar.active==color.value.toString()" v-model="color.colors" style="width:100%" @input="pickColor"/>
             <b-row v-show="avatar.loaded" style="width:100%;height:100%;overflow-y:scroll;">
               <b-col lg="3" v-for='item in avatar.assets[avatar.active]' v-bind:item="item" v-bind:key="item.index">
                 <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:mouseover="mouseOver(item.index)" v-on:click="select(item.index);"/>
@@ -146,7 +148,7 @@ let editor = {
       this.avatar.loaded  = false;
       if(this.store.address==''||!this.isAddress(this.store.address)) {
         this.store.state    = false;
-        this.store.message  = "this is not address."
+        this.store.message  = "this is not store address."
         this.store.about    = null;
         this.editor.tab     = 0;
         this.address        = '';
@@ -176,6 +178,7 @@ let editor = {
 
               for(let i = 0 ; i < this.avatar.tab.length ; i++) {
                 this.avatar.assets[this.avatar.tab[i]['value'].toString()] = [];
+                this.avatar.tab[i]['colors'] = '#ffffff';
                 avatar.view.list(this.store.address,this.avatar.tab[i]['value'],
                   (cat,list)=>{
                     this.avatar.assets[cat.toString()] = this._removeDisabled(list,data&&data.disabled?data.disabled:[]);
@@ -219,8 +222,15 @@ let editor = {
 
       this.avatar.json = {imgs:[]};
       for(let i=0 ; i < this.avatar.layer.length ; i++)
-        this.avatar.json.imgs.push({id:this.avatar.layer[i].index,p:{x:0,y:0},c:'#000000',m:false});
+        this.avatar.json.imgs.push({id:this.avatar.layer[i].index,p:{x:0,y:0},g:this.avatar.active,c:''});
       avatar.view.draw('avatarEditor',this.wallet.address(),this.address,this.avatar.json);
+    },
+    pickColor(value) {
+      let index = this.avatar.layer.findIndex((obj)=>{return obj.layer==this.avatar.active;});
+      if (index > -1) {
+          this.avatar.json.imgs[index].c=value.hex;
+          avatar.view.draw('avatarEditor',this.wallet.address(),this.address,this.avatar.json);
+      }
     },
     uploadAvatar(){
       this.store.address  = this.address;
@@ -253,9 +263,8 @@ let editor = {
 }
 
 Vue.component('editor', editor);
+Vue.component('slider-picker', slider.default);
 
-module.exports = new Vue({
-  el: '#editor'
-});
+module.exports = new Vue({el: '#editor'});
 module.exports.view   = avatar.view;
 //module.exports.editor = editor;

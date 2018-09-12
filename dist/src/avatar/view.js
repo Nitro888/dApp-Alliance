@@ -43,15 +43,16 @@ const view  = new function () {
     for(let i = 0 ; i < json.imgs.length ; i++ ) {
       let style = 'position:absolute;width:100%;height:auto;';
       if(json.imgs[i].p)  style += 'top:'+json.imgs[i].p.y+'%;left:'+json.imgs[i].p.x+'%;';
-      if(json.imgs[i].c)  style += 'color:'+json.imgs[i].c;
-      if(json.imgs[i].m)  {/*todo*/}
-      img += '<img id="'+id+'_'+address+'_'+i+'" src="" style="'+style+'"/>';
+      img += '<object id="'+id+'_'+address+'_'+json.imgs[i].g+'" data="" style="'+style+'"/>';
     }
 
     document.getElementById(id).innerHTML = img+'</div>';
+    let that = this;
+    for(let i = 0 ; i < json.imgs.length ; i++ ) {
+      document.getElementById(id+'_'+address+'_'+json.imgs[i].g).onload  = function() {that.color(id+'_'+address+'_'+json.imgs[i].g,json.imgs[i].c)};
+      view._asset(store,id+'_'+address+'_'+json.imgs[i].g,view.web3.utils.padLeft(view.web3.utils.toHex(json.imgs[i].id),64));
+    }
 
-    for(let i = 0 ; i < json.imgs.length ; i++ )
-      view._asset(store,id+'_'+address+'_'+i,view.web3.utils.padLeft(view.web3.utils.toHex(json.imgs[i].id),64));
     if(callback)
       callback(store);
   },
@@ -70,11 +71,17 @@ const view  = new function () {
     view.loadJson(url,(xhr,data)=>{
       if(xhr==null&&data&&data.result&&data.result.length>0){
         let temp    = view.web3.eth.abi.decodeLog(conf.assetLog['inputs'],data.result[data.result.length-1].data,data.result[data.result.length-1].topics);
-        document.getElementById(div).src = view.web3.utils.hexToUtf8(temp['_img']);
+        fetch(view.web3.utils.hexToUtf8(temp['_img'])).
+          then(function(response) {return response.blob();}).
+          then(function(blob) {document.getElementById(div).data = URL.createObjectURL(blob);});
       } else {
         console.log("error:"+address);
       }
     });
+  },
+  this.color = function (div,color) {
+    if(color!=''&&document.getElementById(div)&&document.getElementById(div).contentDocument&&document.getElementById(div).contentDocument.getElementById('Color'))
+      document.getElementById(div).contentDocument.getElementById('Color').setAttribute("fill", color);
   },
   this.list = function (address,category,callback=null) {
     let url = conf.api+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+address+'&topic0='+view.web3.eth.abi.encodeEventSignature(conf.assetLog);
