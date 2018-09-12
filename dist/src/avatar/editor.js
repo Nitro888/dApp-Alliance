@@ -222,7 +222,7 @@ let editor = {
 
       this.avatar.json = {imgs:[]};
       for(let i=0 ; i < this.avatar.layer.length ; i++)
-        this.avatar.json.imgs.push({id:this.avatar.layer[i].index,p:{x:0,y:0},g:this.avatar.active,c:''});
+        this.avatar.json.imgs.push({id:this.avatar.layer[i].index,p:{x:0,y:0},g:this.avatar.layer[i].layer,c:''});
       avatar.view.draw('avatarEditor',this.wallet.address(),this.address,this.avatar.json);
     },
     pickColor(value) {

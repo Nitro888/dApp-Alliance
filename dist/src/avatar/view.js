@@ -43,7 +43,7 @@ const view  = new function () {
     for(let i = 0 ; i < json.imgs.length ; i++ ) {
       let style = 'position:absolute;width:100%;height:auto;';
       if(json.imgs[i].p)  style += 'top:'+json.imgs[i].p.y+'%;left:'+json.imgs[i].p.x+'%;';
-      img += '<object id="'+id+'_'+address+'_'+json.imgs[i].g+'" data="" style="'+style+'"/>';
+      img += '<object id="'+id+'_'+address+'_'+json.imgs[i].g+'" data="" style="'+style+'"></object>';
     }
 
     document.getElementById(id).innerHTML = img+'</div>';
