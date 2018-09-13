@@ -38,17 +38,17 @@ let editor = {
         </b-col>
 
         <b-col lg="8">
-            <b-nav v-show="editor.tab==0&&avatar.tab.length>0" ref="height1" pills justified tabs v-on:change="matchHeight();">
-              <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.value" :active="avatar.active==item.value.toString()" v-on:click="avatar.active=item.value.toString();">{{item.text}}</b-nav-item>
-            </b-nav>
+          <b-nav v-show="editor.tab==0&&avatar.tab.length>0" ref="height1" pills justified tabs v-on:change="matchHeight();">
+            <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.value" :active="avatar.active==item.value.toString()" v-on:click="avatar.active=item.value.toString();">{{item.text}}</b-nav-item>
+          </b-nav>
 
-            <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height1+'px','background-color':'red'}">
-              <b-row v-show="avatar.loaded" v-bind:style="{width:'100%',height:'100%','overflow-y':'scroll','background-color':'gray'}">
-                <b-col lg="3" v-for='item in avatar.assets[avatar.active]' v-bind:item="item" v-bind:key="item.index">
-                  <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:mouseover="mouseOver(item.index)" v-on:click="select(item.index);"/>
-                </b-col>
-              </b-row>
-            </div>
+          <b-container v-show="editor.tab==0" v-bind:style="{width:'100%',height:height1+'px','overflow-y':'scroll','background-color':'gray'}">
+            <b-row v-show="avatar.active==assets.value.toString()" v-for='assets in avatar.tab' v-bind:key="assets.value" style="width:auto;height:auto;">
+              <b-col lg="3" v-for='item in avatar.assets[assets.value.toString()]' v-bind:item="item" v-bind:key="item.index">
+                <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:mouseover="mouseOver(item.index)" v-on:click="select(item.index);"/>
+              </b-col>
+            </b-row>
+          </b-container>
 
           <div v-if="editor.tab==1">
             <b-form-select v-model="editor.selected" :options="this.avatar.tab" class="mb-3" size="sm" />
@@ -93,9 +93,8 @@ let editor = {
       editor      : {tab:0,selected:null,assetFile:null},
       contract    : {message:'',state:true,password:''},
       setting     : {default:{"category":[{"value":0,"text":"body"},{"value":1,"text":"cloth"},
-                                          {"value":2,"text":"face"},{"value":3,"text":"nose"},{"value":4,"text":"tatoo"},
-                                          {"value":5,"text":"eye"},{"value":6,"text":"eyebrow"},{"value":7,"text":"mouth"},
-                                          {"value":8,"text":"hair"},{"value":9,"text":"mustache"},{"value":10,"text":"accessories"}],"disabled":[]},
+                                          {"value":2,"text":"nose"},{"value":3,"text":"eye"},{"value":4,"text":"eyebrow"},{"value":5,"text":"mouth"},
+                                          {"value":6,"text":"hair"},{"value":7,"text":"mustache"},{"value":8,"text":"accessories"}],"disabled":[]},
                     json:''},
       avatar      : {tab:[],active:'',assets:[],loaded:false,json:null,layer:[]},
       manager     : null,

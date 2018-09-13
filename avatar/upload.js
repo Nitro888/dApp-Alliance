@@ -13,7 +13,8 @@ const ABI         = [{"constant":false,"inputs":[{"name":"_category","type":"uin
 let options     = {
   assetList   : [],   // a:
   privatekey  : '',   // p:
-  store       : ''    // s:
+  store       : '',   // s:
+  index       : 0     // i:
 }
 
 for (let i = 0; i < process.argv.length; i++) {
@@ -27,6 +28,9 @@ for (let i = 0; i < process.argv.length; i++) {
         break;
       case "s":
         options.store       = temp[1];
+        break;
+      case "i":
+        options.index       = parseInt(temp[1]);
         break;
     }
 }
@@ -49,19 +53,19 @@ for(let i = 0 ; i < temp.length ; i++) {
 // crete privatekey -> account
 let account   = web3.eth.accounts.privateKeyToAccount('0x'+options.privatekey);
 let contract  = new web3.eth.Contract(ABI,options.store);
-let index     = 0;
 
 console.log('Address---------------------------------------');
 console.log(account.address);
+console.log('TOTAL : ' + assets.length + ' assets');
 console.log('START-----------------------------------------');
 
 function upload() {
-  if(index<assets.length) {
-    console.log(index+' ) Loading ==>',assets[index].category,assets[index].asset);
+  if(options.index<assets.length) {
+    console.log(options.index+' ) Loading ==>',assets[options.index].category,assets[options.index].asset);
 
     let fr = new FileReader();
      fr.onload = function(){
-       let data  = contract.methods.asset(assets[index].category,web3.utils.bytesToHex(gzip.zip(fr.result,{level:9}))).encodeABI();
+       let data  = contract.methods.asset(assets[options.index].category,web3.utils.bytesToHex(gzip.zip(fr.result,{level:9}))).encodeABI();
        let tx    = {'from':account.address,'to':options.store,'value':web3.utils.toHex(0),'data':data};
        web3.eth.getGasPrice((e,gasPrice)=>{
          console.log('price ===========>',gasPrice);
@@ -71,17 +75,20 @@ function upload() {
              tx['gasPrice']	= web3.utils.toHex(parseInt(gasPrice));
              tx['gasLimit']	= web3.utils.toHex(parseInt(gasLimit));
              account.signTransaction(tx).then((r)=>{
-               web3.eth.sendSignedTransaction(r.rawTransaction)
-                 .on('transactionHash',(r0)=>{console.log('hash ============>',r0);})
-                 .then((r1)=>{index++;upload();})
-                 .catch((e)=>{if(error)console.log(e);});
+               if(r!=null&&r.rawTransaction!=null)
+                  web3.eth.sendSignedTransaction(r.rawTransaction)
+                    .on('transactionHash',(r0)=>{console.log('hash ============>',r0);})
+                    .then((r1)=>{options.index++;upload();})
+                    .catch((e)=>{if(error)console.log(e);});
+               else
+                  console.log(r);
              });
            });
          }
        });
 
      }
-     fr.readAsDataURL(new File(assets[index].asset));
+     fr.readAsDataURL(new File(assets[options.index].asset));
   } else {
     console.log('FINISH-----------------------------------------');
   }
