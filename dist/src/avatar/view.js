@@ -1,3 +1,4 @@
+const gzip = require('gzip-js');
 const conf = {
   manager   : '0xd8ad700681e765ccaf8fb855036641e72f01cbf5',
   avatarLog : {"anonymous":false,"inputs":[{"indexed":true,"name":"_user","type":"address"},{"indexed":true,"name":"_contract","type":"address"},{"indexed":false,"name":"_msgPack","type":"bytes"}],"name":"AVATAR","type":"event"},
@@ -49,7 +50,7 @@ const view  = new function () {
     document.getElementById(id).innerHTML = img+'</div>';
     let that = this;
     for(let i = 0 ; i < json.imgs.length ; i++ ) {
-      document.getElementById(id+'_'+address+'_'+json.imgs[i].g).onload  = function() {that.color(id+'_'+address+'_'+json.imgs[i].g,json.imgs[i].c)};
+      document.getElementById(id+'_'+address+'_'+json.imgs[i].g).onload  = function() {that.color(id,address,json.imgs[i].g,json.imgs[i].c)};
       view._asset(store,id+'_'+address+'_'+json.imgs[i].g,view.web3.utils.padLeft(view.web3.utils.toHex(json.imgs[i].id),64));
     }
 
@@ -66,12 +67,15 @@ const view  = new function () {
         callback(null);
     });
   },
+  this.unzip = function(bytes) {
+    return view.web3.utils.hexToUtf8(view.web3.utils.bytesToHex(gzip.unzip(view.web3.utils.hexToBytes(bytes))));
+  },
   this._asset = function(address,div,id) {
     let url = conf.api+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+address+'&topic0='+view.web3.eth.abi.encodeEventSignature(conf.assetLog)+'&topic2='+id;
     view.loadJson(url,(xhr,data)=>{
       if(xhr==null&&data&&data.result&&data.result.length>0){
         let temp    = view.web3.eth.abi.decodeLog(conf.assetLog['inputs'],data.result[data.result.length-1].data,data.result[data.result.length-1].topics);
-        fetch(view.web3.utils.hexToUtf8(temp['_img'])).
+        fetch(view.unzip(temp['_img'])).
           then(function(response) {return response.blob();}).
           then(function(blob) {document.getElementById(div).data = URL.createObjectURL(blob);});
       } else {
@@ -79,9 +83,12 @@ const view  = new function () {
       }
     });
   },
-  this.color = function (div,color) {
-    if(color!=''&&document.getElementById(div)&&document.getElementById(div).contentDocument&&document.getElementById(div).contentDocument.getElementById('Color'))
-      document.getElementById(div).contentDocument.getElementById('Color').setAttribute("fill", color);
+  this.color = function (id,address,category,color) {
+    if(color!='') {
+      let element = document.getElementById(id+'_'+address+'_'+category);
+      if(element&&element.contentDocument&&element.contentDocument.getElementById('Color'))
+        element.contentDocument.getElementById('Color').setAttribute("fill", color);
+    }
   },
   this.list = function (address,category,callback=null) {
     let url = conf.api+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+address+'&topic0='+view.web3.eth.abi.encodeEventSignature(conf.assetLog);
@@ -93,7 +100,7 @@ const view  = new function () {
           let temp    = view.web3.eth.abi.decodeLog(conf.assetLog['inputs'],data.result[i].data,data.result[i].topics);
           result.push({
             index     : view.web3.utils.hexToNumber(data.result[i].topics[2]),
-            img       : view.web3.utils.hexToUtf8(temp['_img'])
+            img       : view.unzip(temp['_img'])
           });
         }
         if(callback)

@@ -1,6 +1,7 @@
 var slider  = require('vue-color/src/components/Slider.vue');
 let avatar  = require('./view.js');
 const aMgr  = require('../abi/avatar.js');
+const gzip  = require('gzip-js');
 
 let editor = {
   template: `
@@ -25,8 +26,11 @@ let editor = {
 
       <b-row>
         <b-col lg="4">
-          <div v-show="editor.tab==0" ref="height0" style="width:100%;padding-top:100%;position:relative;background-color:gray;">
-            <div id="avatarEditor" style="position:absolute;width:100%;height:100%;top:0%;left:0%;"/>
+          <div v-show="editor.tab==0" ref="height0">
+            <div style="width:100%;padding-top:100%;position:relative;">
+              <div id="avatarEditor" style="position:absolute;width:100%;height:100%;top:0%;left:0%;background-color:gray;"/>
+            </div>
+            <slider-picker class="mt-2" v-for='color in avatar.tab' v-bind:key="color.value" v-show="avatar.active==color.value.toString()" v-model="color.colors" style="width:100%" @input="pickColor"/>
           </div>
           <div v-if="editor.tab==1" style="width:100%;padding-top:100%;position:relative;overflow:hidden;background-color:gray;">
             <img ref="assetView" src="" style="position:absolute;width:100%;height:auto;top:0%;left:0%;"/>
@@ -34,21 +38,21 @@ let editor = {
         </b-col>
 
         <b-col lg="8">
-          <b-nav v-show="editor.tab==0&&avatar.tab.length>0" ref="height1" pills justified tabs v-on:change="matchHeight();">
-            <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.value" :active="avatar.active==item.value.toString()" v-on:click="avatar.active=item.value.toString();">{{item.text}}</b-nav-item>
-          </b-nav>
-          <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height1+'px','background-color':'gray'}">
-            <slider-picker v-for='color in avatar.tab' v-bind:key="color.value" v-show="avatar.active==color.value.toString()" v-model="color.colors" style="width:100%" @input="pickColor"/>
-            <b-row v-show="avatar.loaded" style="width:100%;height:100%;overflow-y:scroll;">
-              <b-col lg="3" v-for='item in avatar.assets[avatar.active]' v-bind:item="item" v-bind:key="item.index">
-                <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:mouseover="mouseOver(item.index)" v-on:click="select(item.index);"/>
-              </b-col>
-            </b-row>
-          </div>
+            <b-nav v-show="editor.tab==0&&avatar.tab.length>0" ref="height1" pills justified tabs v-on:change="matchHeight();">
+              <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.value" :active="avatar.active==item.value.toString()" v-on:click="avatar.active=item.value.toString();">{{item.text}}</b-nav-item>
+            </b-nav>
+
+            <div v-show="editor.tab==0" v-bind:style="{width:'100%',height:height1+'px','background-color':'red'}">
+              <b-row v-show="avatar.loaded" v-bind:style="{width:'100%',height:'100%','overflow-y':'scroll','background-color':'gray'}">
+                <b-col lg="3" v-for='item in avatar.assets[avatar.active]' v-bind:item="item" v-bind:key="item.index">
+                  <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:mouseover="mouseOver(item.index)" v-on:click="select(item.index);"/>
+                </b-col>
+              </b-row>
+            </div>
 
           <div v-if="editor.tab==1">
             <b-form-select v-model="editor.selected" :options="this.avatar.tab" class="mb-3" size="sm" />
-            <b-form-file size="sm" placeholder="Choose a file..." v-on:change="loadAsset($event.target.files);" accept="image/*"></b-form-file>
+            <b-form-file size="sm" placeholder="Choose a file..." v-on:change="loadAsset($event.target.files);" accept=".svg"></b-form-file>
           </div>
         </b-col>
       </b-row>
@@ -229,7 +233,7 @@ let editor = {
       let index = this.avatar.layer.findIndex((obj)=>{return obj.layer==this.avatar.active;});
       if (index > -1) {
           this.avatar.json.imgs[index].c=value.hex;
-          avatar.view.draw('avatarEditor',this.wallet.address(),this.address,this.avatar.json);
+          avatar.view.color('avatarEditor',this.wallet.address(),this.avatar.json.imgs[index].g,this.avatar.json.imgs[index].c)
       }
     },
     uploadAvatar(){
@@ -250,7 +254,7 @@ let editor = {
         this.contract.state     = true;
         this.contract.message   = "";
         let temp  = new this.wallet.web3.eth.Contract(aMgr.avatar,this.address);
-        let data  = temp.methods.asset(this.editor.selected,this.wallet.web3.utils.utf8ToHex(this.editor.assetFile)).encodeABI();
+        let data  = temp.methods.asset(this.editor.selected,this.wallet.web3.utils.bytesToHex(gzip.zip(this.editor.assetFile,{level:9}))).encodeABI();
         this.wallet.sendTx(this.store.address,this.contract.password,0,data,(e)=>{this.contract.state=false;this.contract.message=e;},(h)=>{this.contract.state=true;this.contract.message="Tx:"+h;},(r)=>{this.contract.state=true;this.contract.message="Success";});
       }
     },

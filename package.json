@@ -25,6 +25,7 @@
     "multer": "latest",
     "socket.io": "latest",
     "fs": "latest",
+    "gzip-js": "latest",
     "async": "latest",
     "vue": "latest",
     "vue-loader": "latest",

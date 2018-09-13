@@ -2,6 +2,7 @@
 
 const Web3        = require('web3');
 const fs          = require('file-system');
+const gzip        = require('gzip-js');
 var FileAPI       = require('file-api'), File = FileAPI.File , FileReader = FileAPI.FileReader;
 
 const provider    = 'https://ropsten.infura.io';
@@ -30,6 +31,7 @@ for (let i = 0; i < process.argv.length; i++) {
     }
 }
 
+console.log('Option----------------------------------------');
 console.log(options);
 
 let list    = fs.readFileSync(options.assetList, 'utf8');
@@ -49,29 +51,33 @@ let account   = web3.eth.accounts.privateKeyToAccount('0x'+options.privatekey);
 let contract  = new web3.eth.Contract(ABI,options.store);
 let index     = 0;
 
+console.log('Address---------------------------------------');
 console.log(account.address);
 console.log('START-----------------------------------------');
 
 function upload() {
   if(index<assets.length) {
-    console.log('Loading ==>',assets[index].category,assets[index].asset);
+    console.log(index+' ) Loading ==>',assets[index].category,assets[index].asset);
 
     let fr = new FileReader();
      fr.onload = function(){
-       let data  = contract.methods.asset(assets[index].category,web3.utils.utf8ToHex(fr.result)).encodeABI();
+       let data  = contract.methods.asset(assets[index].category,web3.utils.bytesToHex(gzip.zip(fr.result,{level:9}))).encodeABI();
        let tx    = {'from':account.address,'to':options.store,'value':web3.utils.toHex(0),'data':data};
        web3.eth.getGasPrice((e,gasPrice)=>{
-         if(e==null)
+         console.log('price ===========>',gasPrice);
+         if(e==null) {
            web3.eth.estimateGas(tx).then((gasLimit)=>{
+             console.log('limit ===========>',gasLimit);
              tx['gasPrice']	= web3.utils.toHex(parseInt(gasPrice));
              tx['gasLimit']	= web3.utils.toHex(parseInt(gasLimit));
              account.signTransaction(tx).then((r)=>{
                web3.eth.sendSignedTransaction(r.rawTransaction)
-                 .on('transactionHash',(r0)=>{console.log(r0);})
+                 .on('transactionHash',(r0)=>{console.log('hash ============>',r0);})
                  .then((r1)=>{index++;upload();})
                  .catch((e)=>{if(error)console.log(e);});
              });
            });
+         }
        });
 
      }
