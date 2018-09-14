@@ -41,7 +41,7 @@
               <use href='#path2' />
             </mask>
             <use
-              id='Hijab-Mask'
+              class='CustomColor'
               stroke='none'
               fill='#E6E6E6'
               fillRule='evenodd'

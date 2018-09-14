@@ -12,7 +12,7 @@
           <use href='#path1' />
         </mask>
         <use
-          id='Color'
+          class='CustomColor'
           fill='#28354B'
           fillRule='evenodd'
           href='#path1'

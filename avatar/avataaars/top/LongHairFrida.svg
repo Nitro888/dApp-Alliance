@@ -182,7 +182,7 @@
         <g id='Top/Long-Hair/Frida' mask='url("#mask1")'>
           <g transform='translate(-1.000000, 0.000000)'>
             <g
-              id='Color'
+              class='CustomColor'
               strokeWidth='1'
               fillRule='evenodd'
               transform='translate(57.000000, 12.000000)'>

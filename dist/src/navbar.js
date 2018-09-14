@@ -13,8 +13,8 @@ const navbar = {
           <b-nav-item v-if="!logedin" v-on:click="_login()"><i class="fas fa-sign-in-alt"></i></b-nav-item>
           <b-nav-item-dropdown v-if="logedin" text='<i class="fas fa-wallet"></i>' no-caret right>
             <b-dropdown-header v-show="logedin&&avatarHas">
-              <div style="width:100%;padding-top:100%;position:relative;background-color:gray;border-radius:50%;overflow:hidden;">
-                <div id="avatarDropdown" style="position:absolute;width:100%;height:100%;top:0%;left:0%;"/>
+              <div style="width:100%;padding-top:100%;position:relative;border-radius:50%;overflow:hidden;">
+                <div id="avatarDropdown" style="position:absolute;width:100%;height:100%;top:0%;left:0%;background-color:gray;"/>
               </div>
             </b-dropdown-header>
             <b-dropdown-divider></b-dropdown-divider>
@@ -139,8 +139,7 @@ const navbar = {
           this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
 
       if(!this.avatarLoad) {
-        avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{this.avatarHas=true;});
-        avatar.view.load('avatarDropdown',wallet.address());
+        avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{this.avatarHas=true;avatar.view.load('avatarDropdown',wallet.address());});
         this.avatarLoad = true;
       }
     },

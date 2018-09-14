@@ -4,7 +4,7 @@
         <circle id='The-White-Stuff' fill='#FFFFFF' cx='30' cy='22' r='14' />
         <circle id='Eye-Ball' fill='#FFFFFF' cx='82' cy='22' r='14' />
         <circle
-          id='Color'
+          class='CustomColor'
           opacity='0.699999988'
           fill='#000000'
           cx='30'
@@ -12,7 +12,7 @@
           r='6'
         />
         <circle
-          id='Color'
+          class='CustomColor'
           opacity='0.699999988'
           fill='#000000'
           cx='82'

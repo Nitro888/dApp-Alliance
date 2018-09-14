@@ -30,7 +30,7 @@ let editor = {
             <div style="width:100%;padding-top:100%;position:relative;">
               <div id="avatarEditor" style="position:absolute;width:100%;height:100%;top:0%;left:0%;background-color:gray;"/>
             </div>
-            <slider-picker class="mt-2" v-for='color in avatar.tab' v-bind:key="color.value" v-show="avatar.active==color.value.toString()" v-model="color.colors" style="width:100%" @input="pickColor"/>
+            <slider-picker class="mt-2" v-for='tab in avatar.tab' v-bind:key="tab.layer" v-show="avatar.active==tab.layer" v-model="tab.color" style="width:100%" @input="pickColor"/>
           </div>
           <div v-if="editor.tab==1" style="width:100%;padding-top:100%;position:relative;overflow:hidden;background-color:gray;">
             <img ref="assetView" src="" style="position:absolute;width:100%;height:auto;top:0%;left:0%;"/>
@@ -39,12 +39,12 @@ let editor = {
 
         <b-col lg="8">
           <b-nav v-show="editor.tab==0&&avatar.tab.length>0" ref="height1" pills justified tabs v-on:change="matchHeight();">
-            <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.value" :active="avatar.active==item.value.toString()" v-on:click="avatar.active=item.value.toString();">{{item.text}}</b-nav-item>
+            <b-nav-item v-for='item in avatar.tab' v-bind:item="item" v-bind:key="item.layer" :active="avatar.active==item.layer" v-on:click="avatar.active=item.layer;loadStoreAssets();">{{item.text}}</b-nav-item>
           </b-nav>
 
           <b-container v-show="editor.tab==0" v-bind:style="{width:'100%',height:height1+'px','overflow-y':'scroll','background-color':'gray'}">
-            <b-row v-show="avatar.active==assets.value.toString()" v-for='assets in avatar.tab' v-bind:key="assets.value" style="width:auto;height:auto;">
-              <b-col lg="3" v-for='item in avatar.assets[assets.value.toString()]' v-bind:item="item" v-bind:key="item.index">
+            <b-row v-show="avatar.active==assets.layer" v-for='assets in avatar.tab' v-bind:key="assets.layer" style="width:auto;height:auto;">
+              <b-col lg="3" v-for='item in avatar.tab[avatar.active].assets' v-bind:item="item" v-bind:key="item.index">
                 <img :src="item.img" style="width:100%;height:auto;overflow:hidden;" v-on:mouseover="mouseOver(item.index)" v-on:click="select(item.index);"/>
               </b-col>
             </b-row>
@@ -96,7 +96,7 @@ let editor = {
                                           {"value":2,"text":"nose"},{"value":3,"text":"eye"},{"value":4,"text":"eyebrow"},{"value":5,"text":"mouth"},
                                           {"value":6,"text":"hair"},{"value":7,"text":"mustache"},{"value":8,"text":"accessories"}],"disabled":[]},
                     json:''},
-      avatar      : {tab:[],active:'',assets:[],loaded:false,json:null,layer:[]},
+      avatar      : {active:-1,tab:[],json:null},
       manager     : null,
       price       : {token:'',value:'',erc20:'',price:''}
     }
@@ -135,10 +135,10 @@ let editor = {
       this.contract.state   = true;
       this.contract.password= '';
       this.address          = '';
-      this.avatar.loaded    = false;
       this.price.token      = '';
       this.price.value      = '';
-      this.avatar.layer     = [];
+      this.avatar.select    = -1;
+      this.avatar.tab       = [];
       document.getElementById('avatarEditor').innerHTML = '';
       this.store.address    = address;
       avatar.view.load('avatarEditor',this.wallet.address(),()=>{this.loadStore();this.$refs.refModalEditor.show();},(store)=>{this.store.address=store;this.loadStore();this.$refs.refModalEditor.show();});
@@ -148,14 +148,12 @@ let editor = {
       this.height1  = this.height0-(this.$refs.height1?this.$refs.height1.clientHeight:0);
     },
     loadStore(){
-      this.avatar.loaded  = false;
       if(this.store.address==''||!this.isAddress(this.store.address)) {
         this.store.state    = false;
         this.store.message  = "this is not store address."
         this.store.about    = null;
         this.editor.tab     = 0;
         this.address        = '';
-        this.avatar.tab     = [];
       } else {
         this.store.state    = true;
         this.store.message  = ""
@@ -173,28 +171,37 @@ let editor = {
             this.price.value  = avatar.view.web3.utils.fromWei(this.price.amount.toString(),'ether');
 
             avatar.view.setting(this.address,(data)=>{
-
               data              = data?msgpack.decode(data):null;
               this.avatar.tab   = data&&data.category?data.category:this.setting.default.category;
-              this.avatar.active= this.avatar.tab[0].value.toString();
+              this.avatar.active= this.avatar.tab[0].value;
               this.setting.json = JSON.stringify(data?data:this.setting.default, null, 2);
 
               for(let i = 0 ; i < this.avatar.tab.length ; i++) {
-                this.avatar.assets[this.avatar.tab[i]['value'].toString()] = [];
-                this.avatar.tab[i]['colors'] = '#ffffff';
-                avatar.view.list(this.store.address,this.avatar.tab[i]['value'],
-                  (cat,list)=>{
-                    this.avatar.assets[cat.toString()] = this._removeDisabled(list,data&&data.disabled?data.disabled:[]);
-                    this.avatar.loaded = true;
-                  }
-                );
+                this.avatar.tab[i]['layer']   = i;
+                this.avatar.tab[i]['index']  = -1;
+                this.avatar.tab[i]['assets']  = [];
+                this.avatar.tab[i]['color']   = '';
               }
+              this.loadStoreAssets();
             });
 
             if(this.wallet&&this.wallet.web3&&this.wallet.isAddress()&&r[0].toLowerCase()==this.wallet.address().toLowerCase())
               this.store.message  = "you are store owner";
           }
         });
+      }
+    },
+    loadStoreAssets() {
+      if(this.avatar.tab[this.avatar.active]['color']=='') {
+        this.avatar.tab[this.avatar.active]['color'] = '#ffffff';
+        let layer = this.avatar.active;
+        avatar.view.list(this.store.address,this.avatar.tab[layer]['value'],
+          (cat,list)=>{
+            let setting = JSON.parse(this.setting.json);
+            this.avatar.tab[layer]['assets'] = this._removeDisabled(list,setting.disabled);
+            this.$forceUpdate();
+          }
+        );
       }
     },
     _removeDisabled(array,disabled) {
@@ -217,23 +224,21 @@ let editor = {
       //console.log(index);
     },
     select(index) {
-      let asset = this.avatar.layer.findIndex((obj)=>{return obj.layer==this.avatar.active;});
-      if (asset > -1) this.avatar.layer.splice(asset, 1);
-
-      this.avatar.layer.push({layer:this.avatar.active,index:index});
-      this.avatar.layer.sort(function(a, b){return parseInt(a.layer)-parseInt(b.layer)});
-
-      this.avatar.json = {imgs:[]};
-      for(let i=0 ; i < this.avatar.layer.length ; i++)
-        this.avatar.json.imgs.push({id:this.avatar.layer[i].index,p:{x:0,y:0},g:this.avatar.layer[i].layer,c:''});
+      this.avatar.tab[this.avatar.active]['index']  = index;
+      this._createAvatarJson(index);
       avatar.view.draw('avatarEditor',this.wallet.address(),this.address,this.avatar.json);
     },
     pickColor(value) {
-      let index = this.avatar.layer.findIndex((obj)=>{return obj.layer==this.avatar.active;});
-      if (index > -1) {
-          this.avatar.json.imgs[index].c=value.hex;
-          avatar.view.color('avatarEditor',this.wallet.address(),this.avatar.json.imgs[index].g,this.avatar.json.imgs[index].c)
-      }
+      let index = this.avatar.active;
+      this.avatar.tab[index]['color'] = value.hex;
+      this._createAvatarJson();
+      avatar.view.color('avatarEditor',this.wallet.address(),this.avatar.tab[index]['value'],this.avatar.tab[index]['color']);
+    },
+    _createAvatarJson(index=-1){
+      this.avatar.json  = {imgs:[]};
+      for(let i=0 ; i < this.avatar.tab.length ; i++)
+        if(this.avatar.tab[i]['index']>=0)
+          this.avatar.json.imgs.push({id:this.avatar.tab[i]['index'],p:{x:0,y:0},g:this.avatar.tab[i]['value'],c:this.avatar.tab[i]['index']==index?'':this.avatar.tab[i]['color']});
     },
     uploadAvatar(){
       this.store.address  = this.address;

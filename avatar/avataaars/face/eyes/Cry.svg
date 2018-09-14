@@ -2,7 +2,7 @@
   <g transform='translate(76.000000, 82.000000)'>
       <g id='Eyes/Cry-😢' transform='translate(0.000000, 8.000000)'>
         <circle
-          id='Color'
+          class='CustomColor'
           opacity='0.599999964'
           fill='#000000'
           fillRule='evenodd'
@@ -17,7 +17,7 @@
           fillRule='nonzero'
         />
         <circle
-          id='Color'
+          class='CustomColor'
           opacity='0.599999964'
           fill='#000000'
           fillRule='evenodd'

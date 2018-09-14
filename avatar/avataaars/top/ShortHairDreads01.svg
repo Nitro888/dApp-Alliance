@@ -26,7 +26,7 @@
                 <use href='#path3' />
               </mask>
               <use
-                id='Color'
+                class='CustomColor'
                 fill='#2E3257'
                 href='#path3'
               />

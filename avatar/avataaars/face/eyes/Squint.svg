@@ -17,7 +17,7 @@
           </mask>
           <use id='The-white-stuff' fill='#FFFFFF' href='#Eye1' />
           <circle
-            id='Color'
+            class='CustomColor'
             opacity='0.699999988'
             fill='#000000'
             mask="url('#EyeMask1')"
@@ -32,7 +32,7 @@
           </mask>
           <use id='Eyeball-Mask' fill='#FFFFFF' href='#Eye2' />
           <circle
-            id='Color'
+            class='CustomColor'
             opacity='0.699999988'
             fill='#000000'
             mask="url('#EyeMask2')"
