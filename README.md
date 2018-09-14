@@ -14,6 +14,9 @@ And the stores will be able to set erc20 tokens to use, which will help develop 
 
 ![en toonist avatar alliance](https://user-images.githubusercontent.com/11692220/45530825-820e2300-b827-11e8-8468-fc3a9ae51ed8.png)
 
+** The avatar assets from [Avataaars](https://github.com/fangpenlin/avataaars) developed by [Fang-Pen Lin](https://twitter.com/fangpenlin), the original avatar is designed by [Pablo Stanley](https://twitter.com/pablostanley), the Sketch library can be [found here](http://www.avataaars.com/).
+
+
 # 1. Wallet
 ## 1.1. Create your ethereum wallet.
 Click **+ button** at navigation bar.
