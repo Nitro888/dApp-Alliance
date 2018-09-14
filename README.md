@@ -1,14 +1,14 @@
 # nitro888.github.io
 ## Decentralized Avatar and Digital Contents Store solution.
-### Universal wallet. (for all erc20 tokens and ethereum)
+### Universal wallet (for all erc20 tokens and ethereum).
 Universal wallet is a dapp that makes erc20 tokens available for commerce. Using standard interfaces between stores and wallets, we reduced calls to the contract from two to one.
 
 ![wallet](https://user-images.githubusercontent.com/11692220/45146088-1b708000-b1fd-11e8-9b57-30ea7491de0b.png)
 
 ### Avatar & Badge System.
-It is an ethereum address based avatar dapp that can be used in other services using ethereum or dapps. This is a decentralized dapp that create avatar store dapp, does not makes avatar directly. You can use this decentralized dapp to create your own avatar store without any restrictions, and created   avatars can implement a service, and can shows avatars on all services that use the ethereum address. So with dapp, you can make your service more user friendly, and avatars will make the Etherium ecosystem richer too.
+It is an avatar dapp that can be used in other services using ethereum or dapps based on ethereum address. This is a dapp that creates avatar store dapp, but does not makes avatar directly. You can use this decentralized dapp to create your own avatar store without any restrictions, and created avatars can implement a service, and you can also show avatars on all services that use the ethereum address. So with dapp, you can make your own service more user friendly, and avatars will make the Etherium ecosystem richer too.
 
-Unlike most dapps, which are self-centered, as opposed to decentralization, avatars dapp has been developed with the goal of being available to other services and dapps.
+Unlike most dapps, which are self-centered, as opposed to decentralization, avatar dapp has been developed with the goal of being available to other services and dapps.
 
 And the stores will be able to set erc20 tokens to use, which will help develop the Etherium ecosystem.
 
@@ -61,20 +61,32 @@ Click **avatar button** in input form for open avatar store.
 
 <img width="652" src="https://user-images.githubusercontent.com/11692220/44976526-6c376d00-afa0-11e8-8afd-fbb1e75cd885.png">
 
-## 2.4. Make Avatar.
-Select category, and select image asset. and write password and click cofirm button.
-
-<img width="810" src="https://user-images.githubusercontent.com/11692220/45530392-51c58500-b825-11e8-93f5-9d495a951c23.png">
-
-## 2.5. Upload your avatar asset to your store.
+## 2.4. Upload your avatar asset to your store.
 Select asset category, and select image asset. and write password and click cofirm button.
 
 <img width="812" src="https://user-images.githubusercontent.com/11692220/45530394-51c58500-b825-11e8-9e7e-09150a6f45fa.png">
 
-## 2.6. setting.
+## 2.5. setting.
 You can define the category name of your assets and the order of the layers in which the assets are drawn, and save them as JSON in the block chain. You can also disable the wrong assets and customize it by adding the information you want to JSON.
 
 <img width="811" src="https://user-images.githubusercontent.com/11692220/45530391-512cee80-b825-11e8-82f6-20fb4418e459.png">
+
+## 2.6. Make Avatar.
+Select category, and select image asset. and write password and click cofirm button.
+
+<img width="810" src="https://user-images.githubusercontent.com/11692220/45530392-51c58500-b825-11e8-93f5-9d495a951c23.png">
+
+## 2.7. Use Avatar.
+
+```
+<iframe
+  src="https://www.nitro888.com/avatar/?a=[ADDRESS]"
+  height="300"
+  width="300"
+  frameBorder="0">
+</iframe>
+```
+<img width="800" alt="2" src="https://user-images.githubusercontent.com/11692220/45551782-e7830380-b869-11e8-85c9-c5bc383df2ac.png">
 
 # 3. Digital contents store.
 ## 3.1. Create your contents store.
