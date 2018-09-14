@@ -58,16 +58,15 @@ Click **avatar button** in input form for open avatar store.
 
 <img width="652" src="https://user-images.githubusercontent.com/11692220/44976526-6c376d00-afa0-11e8-8afd-fbb1e75cd885.png">
 
-## 2.4. Upload your avatar asset to your store.
-Select asset category, and select image asset. and write password and click cofirm button.
-
-<img width="812" src="https://user-images.githubusercontent.com/11692220/45530394-51c58500-b825-11e8-9e7e-09150a6f45fa.png">
-
-## 2.5. Make Avatar.
+## 2.4. Make Avatar.
 Select category, and select image asset. and write password and click cofirm button.
 
 <img width="810" src="https://user-images.githubusercontent.com/11692220/45530392-51c58500-b825-11e8-93f5-9d495a951c23.png">
 
+## 2.5. Upload your avatar asset to your store.
+Select asset category, and select image asset. and write password and click cofirm button.
+
+<img width="812" src="https://user-images.githubusercontent.com/11692220/45530394-51c58500-b825-11e8-9e7e-09150a6f45fa.png">
 
 ## 2.6. setting.
 You can define the category name of your assets and the order of the layers in which the assets are drawn, and save them as JSON in the block chain. You can also disable the wrong assets and customize it by adding the information you want to JSON.
