@@ -12,7 +12,7 @@ Unlike most dapps, which are self-centered, as opposed to decentralization, avat
 
 And the stores will be able to set erc20 tokens to use, which will help develop the Etherium ecosystem.
 
-![avatar](https://user-images.githubusercontent.com/11692220/45139388-8c5a6c80-b1ea-11e8-913e-53efae066395.png)
+![en toonist avatar alliance](https://user-images.githubusercontent.com/11692220/45530825-820e2300-b827-11e8-8468-fc3a9ae51ed8.png)
 
 # 1. Wallet
 ## 1.1. Create your ethereum wallet.
