@@ -6,12 +6,12 @@ The advantage of this development is that it eliminates redundantly deployed con
 
 ![intro](https://user-images.githubusercontent.com/11692220/45585539-ef51af00-b920-11e8-876b-ec7ee91c2cc6.png)
 
-### Universal wallet (for all erc20 tokens and ethereum).
+## Universal wallet (for all erc20 tokens and ethereum).
 Universal wallet is a dapp that makes erc20 tokens available for commerce. Using standard interfaces between stores and wallets, we reduced calls to the contract from two to one.
 
 ![wallet](https://user-images.githubusercontent.com/11692220/45146088-1b708000-b1fd-11e8-9b57-30ea7491de0b.png)
 
-### Avatar & Badge System.
+## Avatar & Badge System.
 It is an avatar dapp that can be used in other services using ethereum or dapps based on ethereum address. This is a dapp that creates avatar store dapp, but does not makes avatar directly. You can use this decentralized dapp to create your own avatar store without any restrictions, and created avatars can implement a service, and you can also show avatars on all services that use the ethereum address. So with dapp, you can make your own service more user friendly, and avatars will make the Etherium ecosystem richer too.
 
 Unlike most dapps, which are self-centered, as opposed to decentralization, avatar dapp has been developed with the goal of being available to other services and dapps.
