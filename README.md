@@ -1,4 +1,4 @@
-# dApp Alliance - dApp components for other dApp services.
+# dApp Alliance - components for other dApp services.
 ## Universal wallet, Decentralized Avatar & Badge and Digital Contents Store.
 
 The dApp services consist of a number of contracts, and most projects are open source. Other developers can refer to these codes or add them to the project to develop their own services. There are contracts that are deployed redundantly for each service, which leads to resource waste. Therefore, a dApp should be developed independently for a specific service so that it can be used as a part of other services.
