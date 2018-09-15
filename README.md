@@ -1,5 +1,9 @@
 # nitro888.github.io
-## Decentralized Avatar and Digital Contents Store solution.
+## Universal wallet, Decentralized Avatar and Digital Contents Store solution.
+### dApp Component for dApp services.
+
+![intro](https://user-images.githubusercontent.com/11692220/45581758-f35cdd00-b8de-11e8-9680-b5955fcfae9a.png)
+
 ### Universal wallet (for all erc20 tokens and ethereum).
 Universal wallet is a dapp that makes erc20 tokens available for commerce. Using standard interfaces between stores and wallets, we reduced calls to the contract from two to one.
 
@@ -12,7 +16,7 @@ Unlike most dapps, which are self-centered, as opposed to decentralization, avat
 
 And the stores will be able to set erc20 tokens to use, which will help develop the Etherium ecosystem.
 
-![en toonist avatar alliance](https://user-images.githubusercontent.com/11692220/45530825-820e2300-b827-11e8-8468-fc3a9ae51ed8.png)
+![avatar](https://user-images.githubusercontent.com/11692220/45530825-820e2300-b827-11e8-8468-fc3a9ae51ed8.png)
 
 ** The avatar assets from [Avataaars](https://github.com/fangpenlin/avataaars) developed by [Fang-Pen Lin](https://twitter.com/fangpenlin), the original avatar is designed by [Pablo Stanley](https://twitter.com/pablostanley), the Sketch library can be [found here](http://www.avataaars.com/).
 
