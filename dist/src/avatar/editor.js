@@ -178,7 +178,7 @@ let editor = {
 
               for(let i = 0 ; i < this.avatar.tab.length ; i++) {
                 this.avatar.tab[i]['layer']   = i;
-                this.avatar.tab[i]['index']  = -1;
+                this.avatar.tab[i]['index']   = -1;
                 this.avatar.tab[i]['assets']  = [];
                 this.avatar.tab[i]['color']   = '';
               }
@@ -193,7 +193,7 @@ let editor = {
     },
     loadStoreAssets() {
       if(this.avatar.tab[this.avatar.active]['color']=='') {
-        this.avatar.tab[this.avatar.active]['color'] = '#ffffff';
+        this.avatar.tab[this.avatar.active]['color'] = '';
         let layer = this.avatar.active;
         avatar.view.list(this.store.address,this.avatar.tab[layer]['value'],
           (cat,list)=>{
@@ -225,20 +225,20 @@ let editor = {
     },
     select(index) {
       this.avatar.tab[this.avatar.active]['index']  = index;
-      this._createAvatarJson(index);
+      this._createAvatarJson();
       avatar.view.draw('avatarEditor',this.wallet.address(),this.address,this.avatar.json);
     },
     pickColor(value) {
       let index = this.avatar.active;
-      this.avatar.tab[index]['color'] = value.hex;
+      this.avatar.tab[index]['color'] = this.avatar.tab[index]['color']==''?'#ffffff':value.hex;
       this._createAvatarJson();
       avatar.view.color('avatarEditor',this.wallet.address(),this.avatar.tab[index]['value'],this.avatar.tab[index]['color']);
     },
-    _createAvatarJson(index=-1){
+    _createAvatarJson(){
       this.avatar.json  = {imgs:[]};
       for(let i=0 ; i < this.avatar.tab.length ; i++)
         if(this.avatar.tab[i]['index']>=0)
-          this.avatar.json.imgs.push({id:this.avatar.tab[i]['index'],p:{x:0,y:0},g:this.avatar.tab[i]['value'],c:this.avatar.tab[i]['index']==index?'':this.avatar.tab[i]['color']});
+          this.avatar.json.imgs.push({id:this.avatar.tab[i]['index'],p:{x:0,y:0},g:this.avatar.tab[i]['value'],c:this.avatar.tab[i]['color']});
     },
     uploadAvatar(){
       this.store.address  = this.address;

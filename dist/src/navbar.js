@@ -138,7 +138,7 @@ const navbar = {
         for(let i = 0 ; i < this.tokenList.length ; i++ )
           this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
 
-      if(!this.avatarLoad) {
+      if(!this.avatarLoad&&wallet.isAddress()) {
         avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{this.avatarHas=true;avatar.view.load('avatarDropdown',wallet.address());});
         this.avatarLoad = true;
       }
