@@ -245,6 +245,7 @@ let editor = {
       if(this.isAddress(this.store.address)&&this.avatar.json) {
         this.contract.state     = true;
         this.contract.message   = "";
+        this._createAvatarJson();
         let data  = this.manager.methods.avatar(this.store.address,this.wallet.web3.utils.bytesToHex(msgpack.encode(this.avatar.json))).encodeABI();
         if(this.isAddress(this.price.erc20)) {
           // todo
