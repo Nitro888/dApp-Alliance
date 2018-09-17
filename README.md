@@ -50,6 +50,7 @@ After login, Click **list button** in input form for search your Universal walle
 <img width="520" src="https://user-images.githubusercontent.com/11692220/45161070-f2b0b080-b225-11e8-852a-9307ffb1b8c1.png">
 
 # 2. Avatar
+[![youtube](http://img.youtube.com/vi/jDHmpvMpub0/0.jpg)](https://www.youtube.com/watch?v=jDHmpvMpub0)
 ## 2.1. Create your avatar store.
 <img width="940" src="https://user-images.githubusercontent.com/11692220/45196876-50caab80-b299-11e8-95f0-a2f5e5ceb003.png">
 
