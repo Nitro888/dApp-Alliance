@@ -21,8 +21,7 @@ let wallet	= new function() {
 				}
 
 		    wallet.balances['0x0']  = {'contract':null,'balance':-1,'name':'ETH','icon':'<i class="fab fa-ethereum"></i>'};
-		    for (let i=0 ; i < data['erc20s'].length ; i++)
-		      wallet.addERC20(data['erc20s'][i]);
+				wallet.addERC20s(data['erc20s'],0);
 
 				wallet.createContracts();
 				wallet.update();
@@ -32,10 +31,19 @@ let wallet	= new function() {
 		});
 		return wallet;
   },
-  this.addERC20  	= function(erc20) {
-    if(!wallet.balances[erc20[0]])
-      wallet.balances[erc20[0]] = {'contract':new wallet.web3.eth.Contract(wallet.erc20abi,erc20[0]),'balance':-1,'name':erc20[1],'icon':erc20[2]};
-  },
+	this.addERC20s	= function(erc20s,index) {
+		if(index<erc20s.length) {
+			let erc20 = erc20s[index];
+			if(!wallet.balances[erc20[0]]) {
+				wallet.balances[erc20[0]] = {'contract':new wallet.web3.eth.Contract(wallet.erc20abi,erc20[0]),'balance':-1,'name':erc20[1],'icon':erc20[2]};
+				if(erc20[1]=='') {
+					wallet.balances[erc20[0]]['contract'].methods.name().call((e,r)=>{if(!e){wallet.balances[erc20[0]].name=r;} wallet.addERC20s(erc20s,index+1);});
+				} else {
+					wallet.addERC20s(erc20s,index+1);
+				}
+			}
+		}
+	},
 	this.pushContract = function (abi,address) {
 		if(!wallet.contract[address])
 			wallet.contract[address]	= {a:abi,c:!wallet.web3?null:new wallet.web3.eth.Contract(abi,address)};
@@ -48,17 +56,17 @@ let wallet	= new function() {
 				wallet.contract[address].c	= new wallet.web3.eth.Contract(wallet.contract[address].a,address);
 	},
   this.update			= function() {
-    if(wallet.isAddress()) {
+    if(wallet.address()) {
 			for (let erc20 in wallet.balances)
 				wallet.getBalance(erc20,wallet.callback);
     }
   },
 	this.getBalance	= function(erc20,callback) {
-		if(!wallet.isAddress())
+		if(!wallet.address())
 			return;
 		if(erc20=='0x0')
 			wallet.web3.eth.getBalance(wallet.address(),(e,r)=>{if(!e){wallet.balances[erc20]['balance']=parseInt(r);if(callback)callback();}});
-		else
+		else if(wallet.balances[erc20])
 			wallet.balances[erc20]['contract'].methods.balanceOf(wallet.address()).call((e,r)=>{if(!e){wallet.balances[erc20]['balance']=parseInt(r);if(callback)callback();}});
 	}
 
@@ -93,7 +101,7 @@ let wallet	= new function() {
 		}
 	},
 	this.address = function () {
-		return wallet.keyObject?'0x'+wallet.keyObject.address:'n/a';
+		return wallet.keyObject?'0x'+wallet.keyObject.address:null;
 	},
 	this.addressQR	= function() {
 		return '<img src="https://api.qrserver.com/v1/create-qr-code/?data='+wallet.address()+'&size=256x256 alt="" width="256" height="256"/>';
@@ -104,8 +112,8 @@ let wallet	= new function() {
 	this.txLNK = function (txHash) {
 		return wallet.option['network']['href']+"/tx/"+txHash;
 	},
-	this.isAddress = function () {
-		return wallet.web3?wallet.web3.utils.isAddress(wallet.address()):false;
+	this.isAddress = function (who) {
+		return wallet.web3?wallet.web3.utils.isAddress(who):false;
 	},
 
 	// logout
@@ -117,7 +125,7 @@ let wallet	= new function() {
 
 	// transfer
 	this.transfer	= function(to,password,erc20,amount,error=null,hash=null,success=null) {
-		if(wallet.isAddress())
+		if(wallet.address())
 			wallet.getBalance(erc20,()=>{
 				amount = wallet.web3.utils.toWei(amount,'ether');
 				if(wallet.balances[erc20]['balance']>amount) {
@@ -134,10 +142,10 @@ let wallet	= new function() {
 
 	// sendTx
 	this.sendTx	= function(to,password,amount,data=null,error=null,hash=null,success=null) {
-		if(wallet.isAddress()) {
+		if(wallet.address()) {
 			let privateKey	= wallet.getPrivateKeyString(password);
 
-			if(privateKey!=null&&wallet.web3.utils.isAddress(to)) {
+			if(privateKey!=null&&wallet.isAddress(to)) {
 				wallet.web3.eth.getGasPrice((e,gasPrice)=>{
 					if(e!=null) {
 						if(error)
@@ -163,7 +171,7 @@ let wallet	= new function() {
 					}
 				});
 			} else {
-				if(error&&wallet.web3.utils.isAddress(to))
+				if(error&&wallet.isAddress(to))
 					error("Wrong password");
 			}
 		}
@@ -181,7 +189,7 @@ let wallet	= new function() {
 
 	// txHistory
 	this.txHistory	= function(erc20, callback) {
-		if(wallet.isAddress()) {
+		if(wallet.address()) {
 			if(erc20=="0x0")
 				wallet.txNormal(wallet.address(),(data0)=>{
 						wallet.txInternal(wallet.address(),(data1)=>{

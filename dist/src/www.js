@@ -233,22 +233,22 @@ let main = {
     },
     computed: {
       isLogedIn: function () {
-        return this.wallet.web3&&this.wallet.isAddress();
+        return this.wallet.web3&&this.wallet.address();
       },
       isOwner: function () {
-        return this.wallet.web3&&this.wallet.isAddress()&&this.data.owner.toLowerCase()==this.wallet.address().toLowerCase();
+        return this.wallet.web3&&this.wallet.address()&&this.data.owner.toLowerCase()==this.wallet.address().toLowerCase();
       },
       isAddressOwner: function () {
-        return this.data.owner==''||this.wallet.web3.utils.isAddress(this.data.owner);
+        return this.data.owner==''||this.wallet.isAddress(this.data.owner);
       },
       isAddressStore: function () {
-        return this.data.store==''||this.wallet.web3.utils.isAddress(this.data.store);
+        return this.data.store==''||this.wallet.isAddress(this.data.store);
       },
       isAddressCreator: function () {
-        return this.data.creator==''||this.wallet.web3.utils.isAddress(this.data.creator);
+        return this.data.creator==''||this.wallet.isAddress(this.data.creator);
       },
       isAddressErc20: function () {
-        return this.data.erc20==''||this.wallet.web3.utils.isAddress(this.data.erc20);
+        return this.data.erc20==''||this.wallet.isAddress(this.data.erc20);
       },
       isErc20Wallet : function () {
         return this.contract.key==KEYS['ERC20WALLET']['KEY'];
@@ -339,7 +339,7 @@ let main = {
         });
       },
       _confirmContract() {
-        if(this.wallet.web3&&this.wallet.isAddress()) {
+        if(this.wallet.web3&&this.wallet.address()) {
           let address   = '';
           let data      = null;
           switch (this.contract.key) {
@@ -462,9 +462,9 @@ let main = {
       showContract(key,address,error=null,success=null) {
         this.contract.title       = (address==''?"Create ":"Contract ")+KEYS[key]['TITLE'];
         this.contract.address     = address;
-        this.contract.link        = this.wallet.web3.utils.isAddress(address)?this.wallet.option['network']['href']+"/address/"+address:'#';
+        this.contract.link        = this.wallet.isAddress(address)?this.wallet.option['network']['href']+"/address/"+address:'#';
         this.contract.communities = false;
-        this.contract.tab         = this.wallet.web3&&this.wallet.isAddress()?(address==''?0:5):5;
+        this.contract.tab         = this.wallet.web3&&this.wallet.address()?(address==''?0:5):5;
         this.contract.key         = key;
         this.contract.state       = true;
         this.contract.message     = '';
@@ -472,7 +472,7 @@ let main = {
 
         this._resetData();
 
-        if(this.wallet.web3&&this.wallet.web3.utils.isAddress(address)) {
+        if(this.wallet.web3&&this.wallet.isAddress(address)) {
           switch (key) {
             case KEYS['ERC20WALLET']['KEY']:    this.showErc20Wallet(key,address,error,success); break;
             case KEYS['STORE_AVATAR']['KEY']:   this.showAvatar(key,address,error,success); break;
@@ -597,15 +597,15 @@ Vue.component('content-sub',{
     },
     computed: {
       isLogedIn: function () {
-        return this.wallet.web3&&this.wallet.isAddress();
+        return this.wallet.web3&&this.wallet.address();
       },
       isAddress: function () {
-        return this.address==''||this.wallet.web3.utils.isAddress(this.address);
+        return this.address==''||this.wallet.isAddress(this.address);
       },
     },
     methods: {
       list() {
-        if(this.wallet.web3&&this.wallet.isAddress())
+        if(this.wallet.web3&&this.wallet.address())
           app.$children[0].showContractList(this.sub.key);
       },
       contract(address='') {
@@ -613,11 +613,11 @@ Vue.component('content-sub',{
         app.$children[0].showContract(this.sub.key,address,(r)=>{this.state=false;this.message=r;}/*,(r)=>{this.state=true;this.message=r;}*/);
       },
       showAvatarEditor() {
-        if(this.wallet.web3.utils.isAddress(this.address))
+        if(this.wallet.isAddress(this.address))
           editor.$children[0].showModal(this.address);
       },
       about() {
-        if(this.wallet.web3.utils.isAddress(this.address))
+        if(this.wallet.isAddress(this.address))
           this.contract(this.address);
       }
     }

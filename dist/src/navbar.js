@@ -118,7 +118,7 @@ const navbar = {
       return this.create.pw0==''?"Please input password":(this.create.pw0==this.create.pw1)?"Can create wallet":"Passwords are not same";
     },
     stateTo: function () {
-      return wallet.web3?wallet.web3.utils.isAddress(this.withdrawal.to)&&wallet.address().toLowerCase()!=this.withdrawal.to.toLowerCase():false;
+      return wallet.web3?wallet.isAddress(this.withdrawal.to)&&wallet.address().toLowerCase()!=this.withdrawal.to.toLowerCase():false;
     },
     stateAmount: function () {
       return wallet.web3?wallet.balances[this.withdrawal.id].balance>wallet.web3.utils.toWei(this.withdrawal.amount!=""?this.withdrawal.amount.toString():"0",'ether'):false;
@@ -138,7 +138,7 @@ const navbar = {
         for(let i = 0 ; i < this.tokenList.length ; i++ )
           this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
 
-      if(!this.avatarLoad&&wallet.isAddress()) {
+      if(!this.avatarLoad&&wallet.address()) {
         avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{this.avatarHas=true;avatar.view.load('avatarDropdown',wallet.address());});
         this.avatarLoad = true;
       }
@@ -159,7 +159,7 @@ const navbar = {
     },
     _logout() {
       wallet.logout();
-      this.logedin    = wallet.isAddress();
+      this.logedin    = wallet.address()!=null;
       this.avatarLoad = false;
       this.avatarHas  = false;
       this.update();
@@ -167,7 +167,7 @@ const navbar = {
     _withdrawalOK() {
       if(!(wallet.web3?wallet.balances[this.withdrawal.id].balance>wallet.web3.utils.toWei(this.withdrawal.amount!=""?this.withdrawal.amount.toString():"0",'ether'):false))
         return;
-      if(wallet.web3.utils.isAddress(this.withdrawal.to)&&(this.withdrawal.amount>0))
+      if(wallet.isAddress(this.withdrawal.to)&&(this.withdrawal.amount>0))
         wallet.transfer(this.withdrawal.to,this.withdrawal.pw,this.withdrawal.id,this.withdrawal.amount,
           (e)=>{this.withdrawal.statePw=false;this.withdrawal.feedbackPw=e;},
           (h)=>{this.withdrawal.statePw=true;this.withdrawal.feedbackPw="Tx:"+h;},
@@ -197,14 +197,14 @@ const navbar = {
           this.login.feedback   = "Log in fail";
           this.login.pw         = '';
           wallet.callback       = null;
-          this.logedin          = wallet.isAddress();
+          this.logedin          = wallet.address()!=null;
         },
         (s)=>{
           this.login.temp       = null;
           this.login.state      = true;
           this.login.feedback   = "Log in success";
           this.login.pw         = '';
-          this.logedin          = wallet.isAddress();
+          this.logedin          = wallet.address()!=null;
         });
     },
     // showModal

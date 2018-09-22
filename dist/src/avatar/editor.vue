@@ -105,13 +105,13 @@
     },
     computed: {
       isLogedIn: function () {
-        return this.wallet&&this.wallet.web3&&this.wallet.isAddress();
+        return this.wallet&&this.wallet.web3&&this.wallet.address();
       },
       isOwner: function () {
         return this.store.about!=null&&this.wallet&&this.wallet.web3&&this.store.about[0].toLowerCase()==this.wallet.address().toLowerCase();
       },
       link:function () {
-        return this.wallet&&this.wallet.web3&&this.wallet.web3.utils.isAddress(this.address)?this.wallet.option['network']['href']+"/address/"+this.address:'#';
+        return this.wallet&&this.wallet.web3&&this.wallet.isAddress(this.address)?this.wallet.option['network']['href']+"/address/"+this.address:'#';
       }
     },
     created: function () {
@@ -187,7 +187,7 @@
                 this.loadStoreAssets();
               });
 
-              if(this.wallet&&this.wallet.web3&&this.wallet.isAddress()&&r[0].toLowerCase()==this.wallet.address().toLowerCase())
+              if(this.wallet&&this.wallet.web3&&this.wallet.address()&&r[0].toLowerCase()==this.wallet.address().toLowerCase())
                 this.store.message  = "you are store owner";
             }
           });
