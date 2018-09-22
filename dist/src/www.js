@@ -67,7 +67,7 @@ let main = {
           <b-form-input :value="item.key" readonly></b-form-input>
           <b-input-group-append>
             <b-btn size="sm" variant="outline-primary" target="_blank" :href="item.actions.link"><i class="fas fa-link"></i></b-btn>
-            <b-btn size="sm" variant="outline-primary" v-on:click="item.actions.contract(item.key);"><i class="fas fa-info"></i></b-btn>
+            <b-btn size="sm" variant="outline-primary" v-on:click="item.actions.contract(item.key);"><i class="fas fa-info-circle"></i></b-btn>
           </b-input-group-append>
         </b-input-group>
       </b-modal>
@@ -80,7 +80,7 @@ let main = {
           <b-nav-item :active="contract.tab==2" :disabled="contract.address==''||!isOwner||!isPack" v-on:click="contract.tab=2;"><i class="fas fa-store"></i></b-nav-item>
           <b-nav-item :active="contract.tab==3" :disabled="contract.address==''||!isOwner||isStore||isCreator||isErc20Wallet" v-on:click="contract.tab=3;"><i class="fas fa-file-invoice-dollar"></i></b-nav-item>
           <b-nav-item :active="contract.tab==4" :disabled="contract.address==''||!isOwner" v-on:click="contract.tab=4;"><i class="fas fa-file-signature"></i></b-nav-item>
-          <b-nav-item :active="contract.tab==5" :disabled="contract.address==''" v-on:click="contract.tab=5;"><i class="fas fa-info"></i></b-nav-item>
+          <b-nav-item :active="contract.tab==5" :disabled="contract.address==''" v-on:click="contract.tab=5;"><i class="fas fa-info-circle"></i></b-nav-item>
         </b-nav>
 
         <b-form-group size="sm" label="Contract" v-if="contract.address!=''">
@@ -583,7 +583,7 @@ Vue.component('content-sub',{
                     <b-form-input type="text" placeholder="contract adress" v-model="address"></b-form-input>
                     <b-input-group-append>
                       <b-btn size="sm" variant="outline-primary" v-if="sub.key==KEYS['STORE_AVATAR']['KEY']" v-on:click="showAvatarEditor()"><i class="fas fa-user-circle"></i></b-btn>
-                      <b-btn size="sm" variant="outline-primary" v-on:click="about()"><i class="fas fa-info"></i></b-btn>
+                      <b-btn size="sm" variant="outline-primary" v-on:click="about()"><i class="fas fa-info-circle"></i></b-btn>
                     </b-input-group-append>
                   </b-input-group>
                 </b-form-group>
