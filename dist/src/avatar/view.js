@@ -135,4 +135,5 @@ const view  = new function () {
 }
 
 module.exports.view = view;
+module.exports.gzip = gzip;
 module.exports.conf = conf;
