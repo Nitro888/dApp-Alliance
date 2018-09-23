@@ -4,11 +4,9 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = {
   entry: {
-    //app : './src/app.js',
-    //navbar : './src/navbar.js',
-    //carousel: './src/carousel.js',
-    www: './dist/src/www.js',
-    viewer: './dist/src/avatar/viewer.js'
+    navbar  : './dist/src/wallet/navbar.js',
+    www    : './dist/src/www.js',
+    viewer  : './dist/src/avatar/viewer.js'
   },
   output: {
     filename: '[name].min.js',

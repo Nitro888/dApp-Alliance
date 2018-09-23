@@ -1,12 +1,11 @@
-let navbar  = require('./wallet/navbar.js');
-
-const aMgr  = require('./abi/avatar.js');
+const aMgr    = require('./abi/avatar.js');
 window.wallet.pushContract(aMgr.manager,aMgr.address);
 
-const sMgr  = require('./abi/store.js');
+const sMgr    = require('./abi/store.js');
 window.wallet.pushContract(sMgr.manager,sMgr.address);
 
-const editor= require('./avatar/editor.js');
+const editor  = require('./avatar/editor.vue');
+Vue.component('editor', editor.default);
 
 //console.log(aMgr.manager);
 //console.log(aMgr.wallet);
@@ -59,6 +58,8 @@ let main = {
                           img-src="./casino.jpg"
         ></b-carousel-slide>
       </b-carousel>
+
+      <editor ref="editorModal"></editor>
 
       <b-modal ref="refModal" :size="modal.size" :title="modal.title" :header-bg-variant="modal.headerBg" :header-text-variant="modal.headerTxt" hide-footer>
         <div class="d-block text-center" v-html="modal.html"></div>
@@ -581,7 +582,7 @@ Vue.component('content-sub',{
                     </b-input-group-prepend>
                     <b-form-input type="text" placeholder="contract adress" v-model="address"></b-form-input>
                     <b-input-group-append>
-                      <b-btn size="sm" variant="outline-primary" v-if="sub.key==KEYS['STORE_AVATAR']['KEY']" v-on:click="showAvatarEditor()"><i class="fas fa-user-circle"></i></b-btn>
+                      <b-btn size="sm" variant="outline-primary" v-if="sub.key==KEYS['STORE_AVATAR']['KEY']&&this.wallet.address()" v-on:click="showAvatarEditor()"><i class="fas fa-user-circle"></i></b-btn>
                       <b-btn size="sm" variant="outline-primary" v-on:click="about()"><i class="fas fa-info-circle"></i></b-btn>
                     </b-input-group-append>
                   </b-input-group>
@@ -613,7 +614,7 @@ Vue.component('content-sub',{
       },
       showAvatarEditor() {
         if(this.wallet.isAddress(this.address))
-          editor.$children[0].showModal(this.address);
+          app.$children[0].$refs.editorModal.showModal(this.address);
       },
       about() {
         if(this.wallet.isAddress(this.address))
