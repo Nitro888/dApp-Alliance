@@ -187,45 +187,45 @@ let main = {
         contents:[
           {left:false,title:"WALLET",image:'c0.jpg',
             inputs:[
-              { input:false,key:KEYS['WALLET']['KEY'],
+              { input:false,key:KEYS['WALLET']['KEY'],address:'',state:true,
                 title:'How to get a wallet.',
                 desc:'If you want to create a wallet, click <i class="far fa-plus-square"></i> icon at menu bar and input passwords and click create button.'},
-              { input:true,key:KEYS['ERC20WALLET']['KEY'],
+              { input:true,key:KEYS['ERC20WALLET']['KEY'],address:'',state:true,
                 title:'How to get a erc20 universal wallet.',
                 desc:'After login, click <i class="fas fa-plus"></i> button.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:true,title:"AVATAR",image:'c1.jpg',
             inputs:[
-              { input:true,key:KEYS['STORE_AVATAR']['KEY'],
+              { input:true,key:KEYS['STORE_AVATAR']['KEY'],address:'',state:true,
                 title:'How to get your avatar store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write avatar store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
-              { input:true,key:KEYS['BADGE']['KEY'],
+              { input:true,key:KEYS['BADGE']['KEY'],address:'',state:true,
                 title:'How to get your badge store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write badge store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:false,title:"STORE",image:'c2.jpg',
             inputs:[
-              { input:true,key:KEYS['STORE_CONTENTS']['KEY'],
+              { input:true,key:KEYS['STORE_CONTENTS']['KEY'],address:'',state:true,
                 title:'How to get your digital contents store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
-              { input:true,key:KEYS['PACK']['KEY'],
+              { input:true,key:KEYS['PACK']['KEY'],address:'',state:true,
                 title:'How to create digital contents pack at store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write pack name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:true,title:"CREATOR",image:'c3.jpg',
             inputs:[
-              { input:true,key:KEYS['CREATOR']['KEY'],
+              { input:true,key:KEYS['CREATOR']['KEY'],address:'',state:true,
                 title:'How to get contents creator account.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]
           },
           {left:false,title:"TICKET",image:'c4.jpg',
             inputs:[
-              { input:false,key:KEYS['TICKET']['KEY'],
+              { input:false,key:KEYS['TICKET']['KEY'],address:'',state:true,
                 title:'Create ticket booth for yours.',
                 desc:'Coming soon.'}]},
           {left:true,title:"CASINO",image:'c5.jpg',
             inputs:[
-              { input:false,key:KEYS['CASINO']['KEY'],
+              { input:false,key:KEYS['CASINO']['KEY'],address:'',state:true,
                 title:'Create your own casino and play.',
                 desc:'Coming soon.'}]},
         ]
@@ -547,7 +547,7 @@ let main = {
         if(!abi)
           return;
         contract.call((e,r)=>{
-          if(e==null){
+          if(!e){
             let topics    = 'topic0='+this.wallet.web3.eth.abi.encodeEventSignature(abi);
             this.wallet.logs(address,topics,(data)=>{
               if(data.length>0) {
@@ -569,86 +569,44 @@ let main = {
     }
 }
 
-Vue.component('content-sub',{
-  props: ['sub'],
-    template:`<div>
-                <h5>{{sub.title}}</h5>
-                <p><span v-html="sub.desc"></span></p>
-                <b-form-group size="sm" v-if="sub.input" invalid-feedback="This is a wrong address." :state="isAddress" class="mb-3">
-                  <b-input-group size="sm">
-                    <b-input-group-prepend>
-                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="contract()"><i class="fas fa-plus"></i></b-btn>
-                      <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="list()"><i class="fas fa-list-ul"></i></b-btn>
-                    </b-input-group-prepend>
-                    <b-form-input type="text" placeholder="contract adress" v-model="address"></b-form-input>
-                    <b-input-group-append>
-                      <b-btn size="sm" variant="outline-primary" v-if="sub.key==KEYS['STORE_AVATAR']['KEY']&&this.wallet.address()" v-on:click="showAvatarEditor()"><i class="fas fa-user-circle"></i></b-btn>
-                      <b-btn size="sm" variant="outline-primary" v-on:click="about()"><i class="fas fa-info-circle"></i></b-btn>
-                    </b-input-group-append>
-                  </b-input-group>
-                </b-form-group>
-              </div>`,
-    data () {
-      return {
-          KEYS:KEYS,
-          wallet:window.wallet,
-          address:''
-      }
-    },
-    computed: {
-      isLogedIn: function () {
-        return this.wallet.web3&&this.wallet.address();
-      },
-      isAddress: function () {
-        return this.address==''||this.wallet.isAddress(this.address);
-      },
-    },
-    methods: {
-      list() {
-        if(this.wallet.web3&&this.wallet.address())
-          app.$children[0].showContractList(this.sub.key);
-      },
-      contract(address='') {
-        //this.address  = "";
-        app.$children[0].showContract(this.sub.key,address,(r)=>{this.state=false;this.message=r;}/*,(r)=>{this.state=true;this.message=r;}*/);
-      },
-      showAvatarEditor() {
-        if(this.wallet.isAddress(this.address))
-          app.$children[0].$refs.editorModal.showModal(this.address);
-      },
-      about() {
-        if(this.wallet.isAddress(this.address))
-          this.contract(this.address);
-      }
-    }
-});
-
 Vue.component('contents',{
   props: ['content'],
   template:`<div>
               <hr/>
               <b-row>
-                <b-col lg="7" v-if="content.left">
-                  <h2>{{content.title}}&nbsp<h6 style="display: inline-block;">
-                    <a v-if="scan!=null" :href="scan" target="_blank"><i class="fas fa-link"></i></a>
-                    <a v-if="git!=null" :href="git" target="_blank"><i class="fab fa-github"></i></a>
-                  </h6></h2>
-                  <content-sub v-for="item in content.inputs" v-bind:sub="item" v-bind:key="item.key"></content-sub>
-                </b-col>
                 <b-col lg="5">
                   <b-img fluid :src="content.image" border-variant="light"/>
                 </b-col>
-                <b-col lg="7" v-if="!content.left">
+                <b-col lg="7">
                   <h2>{{content.title}}&nbsp<h6 style="display: inline-block;">
                     <a v-if="scan!=null" :href="scan" target="_blank"><i class="fas fa-link"></i></a>
                     <a v-if="git!=null" :href="git" target="_blank"><i class="fab fa-github"></i></a>
                   </h6></h2>
-                  <content-sub v-for="item in content.inputs" v-bind:sub="item" v-bind:key="item.key"></content-sub>
+
+                  <div v-for="sub in content.inputs" v-bind:key="sub.key">
+                    <h5>{{sub.title}}</h5>
+                    <p><span v-html="sub.desc"></span></p>
+                    <b-form-group size="sm" v-if="sub.input" invalid-feedback="This is a wrong address." :state="sub.state" class="mb-3">
+                      <b-input-group size="sm">
+                        <b-input-group-prepend>
+                          <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="contract(sub.key)"><i class="fas fa-plus"></i></b-btn>
+                          <b-btn size="sm" v-if="isLogedIn" variant="secondary" v-on:click="list(sub.key)"><i class="fas fa-list-ul"></i></b-btn>
+                        </b-input-group-prepend>
+                        <b-form-input type="text" placeholder="contract adress" v-model="sub.address"></b-form-input>
+                        <b-input-group-append>
+                          <b-btn size="sm" variant="outline-primary" v-if="sub.key==KEYS['STORE_AVATAR']['KEY']&&this.wallet.address()" v-on:click="showAvatarEditor(sub.address)"><i class="fas fa-user-circle"></i></b-btn>
+                          <b-btn size="sm" variant="outline-primary" v-on:click="about(sub.key,sub.address)"><i class="fas fa-info-circle"></i></b-btn>
+                        </b-input-group-append>
+                      </b-input-group>
+                    </b-form-group>
+                  </div>
+
                 </b-col>
               </b-row>
             </div>`,
   data () {
     return {
+      KEYS:KEYS,
       wallet:window.wallet,
       address: {
         AVATAR:aMgr.address,
@@ -664,6 +622,9 @@ Vue.component('contents',{
     }
   },
   computed: {
+    isLogedIn: function () {
+      return this.wallet.web3&&this.wallet.address();
+    },
     scan: function () {
       return this.wallet.web3&&this.address[this.content.title]?this.wallet.option['network']['href']+"/address/"+this.address[this.content.title]:null;
     },
@@ -671,6 +632,23 @@ Vue.component('contents',{
       return this.github[this.content.title]?this.github[this.content.title]:null;
     }
   },
+  methods: {
+    list(key) {
+      if(this.wallet.web3&&this.wallet.address())
+        app.$children[0].showContractList(key);
+    },
+    contract(key,address='') {
+      app.$children[0].showContract(key,address,(r)=>{this.state=false;this.message=r;}/*,(r)=>{this.state=true;this.message=r;}*/); // todo : <<-----
+    },
+    showAvatarEditor(address) {
+      if(this.wallet.isAddress(address))
+        app.$children[0].$refs.editorModal.showModal(address);
+    },
+    about(key,address) {
+      if(this.wallet.isAddress(address))
+        this.contract(key,address);
+    }
+  }
 });
 
 Vue.component('mainvue', main);
