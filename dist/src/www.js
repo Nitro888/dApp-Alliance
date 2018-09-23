@@ -1,13 +1,12 @@
-let navbar  = require('./navbar.js');
+let navbar  = require('./wallet/navbar.js');
 
 const aMgr  = require('./abi/avatar.js');
-navbar.wallet.pushContract(aMgr.manager,aMgr.address);
+window.wallet.pushContract(aMgr.manager,aMgr.address);
 
 const sMgr  = require('./abi/store.js');
-navbar.wallet.pushContract(sMgr.manager,sMgr.address);
+window.wallet.pushContract(sMgr.manager,sMgr.address);
 
 const editor= require('./avatar/editor.js');
-editor.$children[0].wallet = navbar.wallet;
 
 //console.log(aMgr.manager);
 //console.log(aMgr.wallet);
@@ -164,7 +163,7 @@ let main = {
 
         modal:{title:'',size:'md',headerBg:'',headerTxt:'',html:'',items:[]},
 
-        wallet:navbar.wallet,
+        wallet:window.wallet,
          // tab 0 = create, 1 = owner, 2 = store, 3 = price, 4 = desc, 5 = readonly
         contract:{title:'',state:true,message:'',password:'',communities:false,address:'',link:'#',key:'',tab:0},
         communities:[
@@ -591,7 +590,7 @@ Vue.component('content-sub',{
     data () {
       return {
           KEYS:KEYS,
-          wallet:navbar.wallet,
+          wallet:window.wallet,
           address:''
       }
     },
@@ -649,7 +648,7 @@ Vue.component('contents',{
             </div>`,
   data () {
     return {
-      wallet:navbar.wallet,
+      wallet:window.wallet,
       address: {
         AVATAR:aMgr.address,
         STORE:sMgr.address,

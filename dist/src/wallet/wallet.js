@@ -1,4 +1,4 @@
-let wallet	= new function() {
+window.wallet	= new function() {
 	this.web3				= null,
 	this.callback		= null,
 	this.keyObject	= null,
@@ -249,7 +249,4 @@ let wallet	= new function() {
 	}
 }
 
-if(typeof module !== 'undefined')
-  module.exports = wallet.start();
-else
-	wallet.start();
+module.exports = window.wallet.start();

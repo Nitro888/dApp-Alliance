@@ -7,7 +7,7 @@
           <b-form-input size="sm" type="text" placeholder="address of avatar store" v-model="store.address"></b-form-input>
           <b-input-group-append>
             <b-btn size="sm" variant="info" target="_blank" :href="link"><i class="fas fa-link"></i></b-btn>
-            <b-btn size="sm" variant="info" v-on:click="loadStore()"><i class="fas fa-store"></i></b-btn>
+            <b-btn size="sm" variant="info" v-on:click="loadStore()"><i class="fas fa-sync"></i></b-btn>
           </b-input-group-append>
         </b-input-group>
       </b-form-group>
@@ -87,7 +87,7 @@
   export default {
     data() {
       return {
-        wallet      : null,
+        wallet      : window.wallet,
         address     : '',
         height0     : 235,
         height1     : 235,
@@ -108,7 +108,7 @@
         return this.wallet&&this.wallet.web3&&this.wallet.address();
       },
       isOwner: function () {
-        return this.store.about!=null&&this.wallet&&this.wallet.web3&&this.store.about[0].toLowerCase()==this.wallet.address().toLowerCase();
+        return this.store.about!=null&&this.wallet&&this.wallet.web3&&this.wallet.address()&&this.store.about[0].toLowerCase()==this.wallet.address().toLowerCase();
       },
       link:function () {
         return this.wallet&&this.wallet.web3&&this.wallet.isAddress(this.address)?this.wallet.option['network']['href']+"/address/"+this.address:'#';
@@ -187,7 +187,7 @@
                 this.loadStoreAssets();
               });
 
-              if(this.wallet&&this.wallet.web3&&this.wallet.address()&&r[0].toLowerCase()==this.wallet.address().toLowerCase())
+              if(this.wallet&&this.wallet.web3&&this.wallet.address()&&this.wallet.address()&&r[0].toLowerCase()==this.wallet.address().toLowerCase())
                 this.store.message  = "you are store owner";
             }
           });
