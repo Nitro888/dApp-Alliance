@@ -294,8 +294,7 @@
                       '<div><a target="_blank" href="'+wallet.addressLNK()+'">'+wallet.address()+"</a></div>";
         this.$refs.refModal.show();
       },
-      showWithdrawal(id,name) {
-        return;//
+      showWithdrawal(id='0x0',name='ETH') {
         this.reset('withdrawal');
         this.title                  = "Withdrawal ("+name+")";
 
@@ -309,8 +308,7 @@
 
         this.$refs.refModal.show();
       },
-      showTransactions(id,name) {
-        return; // todo : ?????
+      showTransactions(id='0x0',name='ETH') {
         this.reset('html');
         this.title          = "Transactions ("+name+")";
         this.html           = 'Now Loading...'
