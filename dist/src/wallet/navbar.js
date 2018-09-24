@@ -1,4 +1,2 @@
-let navbar  = require('./navbar.vue');
-Vue.component('navbar', navbar.default);
-
-module.exports        = new Vue({el: '#navbar'});
+Vue.component('navbar', require('./navbar.vue').default);
+new Vue({el: '#navbar'});

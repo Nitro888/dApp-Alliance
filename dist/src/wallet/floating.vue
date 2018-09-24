@@ -1,29 +1,25 @@
 <template>
   <div>
-    <b-navbar type="dark" variant="dark" sticky toggleable>
-      <b-navbar-brand href="#">Nitro888</b-navbar-brand>
-      <b-navbar-toggle target="nav_collapse"></b-navbar-toggle>
-      <b-collapse is-nav id="nav_collapse">
-        <b-navbar-nav class="ml-auto">
-          <b-nav-item v-if="!logedin" v-on:click="showCreate()"><i class="far fa-plus-square"></i></b-nav-item>
-          <b-nav-item v-if="!logedin" v-on:click="_login()"><i class="fas fa-sign-in-alt"></i></b-nav-item>
-          <b-nav-item-dropdown v-if="logedin" text='<i class="fas fa-wallet"></i>' no-caret right>
-            <b-dropdown-header v-show="logedin&&avatarHas">
-              <div style="width:100%;padding-top:100%;position:relative;border-radius:50%;overflow:hidden;">
-                <div id="avatarDropdown" style="position:absolute;width:100%;height:100%;top:0%;left:0%;background-color:gray;"/>
-              </div>
-            </b-dropdown-header>
-            <b-dropdown-divider></b-dropdown-divider>
-            <b-dropdown-item v-on:click="showDeposit()"><i class="fas fa-qrcode"></i> Deposit</b-dropdown-item>
-            <b-dropdown-divider></b-dropdown-divider>
-            <navbar-item v-for="token in tokenList" v-bind:item="token" v-bind:key="token.id"></navbar-item>
-            <b-dropdown-divider></b-dropdown-divider>
-            <b-dropdown-item v-on:click="_logout()"><i class="fas fa-sign-out-alt"></i> Logout</b-dropdown-item>
-          </b-nav-item-dropdown>
-          <div v-show="logedin&&avatarHas" id="avatarNavbar" style="height:35px;width:35px;background-color:gray;border-radius:50%;overflow:hidden;"></div>
-        </b-navbar-nav>
-      </b-collapse>
-    </b-navbar>
+    <fab  v-if="!isLogedIn"
+          main-icon   ="clear"
+          :position   ="position"
+          :bg-color   ="bgColor[0]"
+          :actions    ="fabActions[0]"
+          @move       ="move"
+          @create     ="showCreate"
+          @login      ="_login"
+    ></fab>
+    <fab  v-if="isLogedIn"
+          main-icon   ="clear"
+          :position   ="position"
+          :bg-color   ="bgColor[1]"
+          :actions    ="fabActions[1]"
+          @move       ="move"
+          @deposit    ="showDeposit"
+          @withdrawal ="showWithdrawal"
+          @history    ="showTransactions"
+          @logout     ="_logout"
+    ></fab>
     <input type="file" ref="walletLoader" style="display: none;" accept=".json,.wallet" v-on:change="loadWalletFromFile"></input>
     <!-- modal -->
     <b-modal ref="refModal" :title="title" header-bg-variant="dark" header-text-variant="light" hide-footer>
@@ -92,15 +88,58 @@
 <script>
   let wallet  = require('./wallet.js');
   let avatar  = require('../avatar/view.js');
-
-  Vue.component('navbar-item', {
-    props: ['item'],
-    template: '<div><b-dropdown-header><span v-html="item.icon"></span> {{ item.name }}</b-dropdown-header><b-dropdown-item v-on:click="item.root.showWithdrawal(item.id,item.name)"><i class="fas fa-money-check"></i> {{ item.balance }}</b-dropdown-item><b-dropdown-item v-on:click="item.root.showTransactions(item.id,item.name)"><i class="fas fa-history"></i> History</b-dropdown-item></div>'
-  });
+  import fab from 'vue-fab';
 
   export default {
-    data() {
+    components: {
+      fab
+    },
+    data(){
       return {
+        bgColor   : ['#FF643E','#3E8DFF'],
+        position  : 'top-right',
+        fabActions: [
+          [
+            {
+              name: 'move',
+              icon: 'swap_vert'
+            },
+            {
+              name: 'create',
+              icon: 'add'
+            },
+            {
+              name: 'login',
+              icon: 'exit_to_app'
+            }
+          ],
+          [
+            {
+              name: 'move',
+              icon: 'swap_vert'
+            },
+            {
+              name: 'deposit',
+              icon: 'add'
+            },
+            {
+              name: 'withdrawal',
+              icon: 'remove'
+            },
+            {
+              name: 'history',
+              icon: 'history'
+            },
+            {
+              name: 'logout',
+              icon: 'open_in_new'
+            }
+          ]
+        ],
+
+
+        wallet        :window.wallet,
+
         logedin       : false,
         avatarLoad    : false,
         avatarHas     : false,
@@ -115,9 +154,13 @@
         deposit       : '',
         txItems       : [],
         withdrawal    : {id:'',icon:'',balance:0,to:'',feedbackTo:'Please input address',amount:0,feedbackAmount:'Please input amount of coin',pw:'',statePw:true,feedbackPw:''}
+
       }
     },
     computed: {
+      isLogedIn: function () {
+        return this.wallet.web3&&this.wallet.address();
+      },
       createState: function () {
         return (this.create.pw0==this.create.pw1)&&this.create.pw0!='';
       },
@@ -131,7 +174,13 @@
         return wallet.web3?wallet.balances[this.withdrawal.id].balance>wallet.web3.utils.toWei(this.withdrawal.amount!=""?this.withdrawal.amount.toString():"0",'ether'):false;
       }
     },
-    methods: {
+    methods:{
+      move(){
+        if (this.position == 'top-right')
+          this.position = 'bottom-right';
+        else
+          this.position = 'top-right';
+      },
       update() {
         if(this.tokenList.length==0)
           for (let token in wallet.balances)
@@ -145,10 +194,12 @@
           for(let i = 0 ; i < this.tokenList.length ; i++ )
             this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
 
+        /*
         if(!this.avatarLoad&&wallet.address()) {
           avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{this.avatarHas=true;avatar.view.load('avatarDropdown',wallet.address());});
           this.avatarLoad = true;
         }
+        */
       },
       _createOK() {
         if((this.create.pw0==this.create.pw1)&&this.create.pw0!='') {
@@ -201,7 +252,7 @@
         wallet.login(this.login.pw,wallet.keyObject?wallet.keyObject:this.login.temp,
           (e)=>{
             this.login.state      = false;
-            this.login.feedback   = "Log in fail";
+            this.login.feedback   = "Login fail";
             this.login.pw         = '';
             wallet.callback       = null;
             this.logedin          = wallet.address()!=null;
@@ -209,7 +260,7 @@
           (s)=>{
             this.login.temp       = null;
             this.login.state      = true;
-            this.login.feedback   = "Log in success";
+            this.login.feedback   = "Login success";
             this.login.pw         = '';
             this.logedin          = wallet.address()!=null;
             this.$refs.refModal.hide();
@@ -244,6 +295,7 @@
         this.$refs.refModal.show();
       },
       showWithdrawal(id,name) {
+        return;//
         this.reset('withdrawal');
         this.title                  = "Withdrawal ("+name+")";
 
@@ -258,6 +310,7 @@
         this.$refs.refModal.show();
       },
       showTransactions(id,name) {
+        return; // todo : ?????
         this.reset('html');
         this.title          = "Transactions ("+name+")";
         this.html           = 'Now Loading...'
@@ -278,6 +331,8 @@
         });
       }
       // showModal
+
+
     }
   }
 </script>

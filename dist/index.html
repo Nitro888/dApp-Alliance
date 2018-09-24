@@ -25,6 +25,10 @@
     <script src="https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
     <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
 
+    <!-- for fab -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+
     <!-- Plugin JavaScript -->
     <script src="https://cdn.rawgit.com/koffsyrup/FileSaver.js/master/FileSaver.js"></script>
     <script src="https://rawgit.com/kawanet/msgpack-lite/master/dist/msgpack.min.js"></script>
@@ -35,14 +39,23 @@
 
   <body>
 
+    <!--
     <div id="navbar" style="width:100%%">
       <navbar></navbar>
     </div>
+    -->
+    <div id="floating">
+      <floating></floating>
+    </div>
+
     <div id="mainvue" style="width:100%%">
       <mainvue></mainvue>
     </div>
 
+    <!--
     <script src="navbar.min.js"></script>
+    -->
+    <script src="floating.min.js"></script>
     <script src="main.min.js"></script>
 
   </body>
