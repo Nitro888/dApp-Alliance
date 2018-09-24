@@ -5,7 +5,7 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 module.exports = {
   entry: {
     navbar  : './dist/src/wallet/navbar.js',
-    www    : './dist/src/www.js',
+    main    : './dist/src/main.js',
     viewer  : './dist/src/avatar/viewer.js'
   },
   output: {

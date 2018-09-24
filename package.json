@@ -30,6 +30,7 @@
     "vue": "latest",
     "vue-loader": "latest",
     "vue-template-compiler": "latest",
+    "vue-fab": "latest",
     "vue-color": "latest",
     "bootstrap-vue": "latest",
     "webpack": "latest",
