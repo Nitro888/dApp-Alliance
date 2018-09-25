@@ -86,8 +86,11 @@
 </template>
 
 <script>
-  let wallet  = require('./wallet.js');
-  let avatar  = require('../avatar/view.js');
+  let wallet    = require('./wallet.js');
+  let avatar    = require('../avatar/view.js');
+  window.config = require('../abi/avatar.js');
+  window.wallet.pushContract(window.config.manager,window.config.address);
+
   import fab from 'vue-fab';
 
   export default {
@@ -263,8 +266,32 @@
             this.login.feedback   = "Login success";
             this.login.pw         = '';
             this.logedin          = wallet.address()!=null;
+            this._loadUniversalWallet();
             this.$refs.refModal.hide();
           });
+      },
+      _loadUniversalWallet() {
+        let topics  = 'topic0='+wallet.findABI(window.config.manager,'WALLET')['signature']
+                    +'&topic2='+wallet.web3.utils.padLeft(wallet.address(),64)
+                    +'&topic3='+wallet.web3.utils.padLeft(wallet.address(),64)
+                    +'&topic2_3_opr=or';
+        wallet.logs(window.config.address,topics,(data)=>{
+          window.universal = [];
+          for(let i = 0 ; i < data.length ; i++) {
+            let address = '0x'+data[i].topics[1].toString().slice(-40).toLowerCase();
+            let owner   = '0x'+data[i].topics[2].toString().slice(-40).toLowerCase();
+            let from    = '0x'+data[i].topics[3].toString().slice(-40).toLowerCase();
+
+            if(owner==this.wallet.address().toLowerCase())
+              window.universal.push({ key:address, owner:owner, from:from, name : ''});
+            else {
+              let index = window.universal.findIndex(x=>x.from==owner);
+              if(index>-1)
+                window.universal.splice(index,1);
+            }
+          }
+          console.log(window.universal);
+        });
       },
       // showModal
       reset(show) {

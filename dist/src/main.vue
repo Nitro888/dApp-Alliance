@@ -160,11 +160,8 @@
 </template>
 
 <script>
-  const aMgr    = require('./abi/avatar.js');
-  window.wallet.pushContract(aMgr.manager,aMgr.address);
-
-  const sMgr    = require('./abi/store.js');
-  window.wallet.pushContract(sMgr.manager,sMgr.address);
+  window.store  = require('./abi/store.js');
+  window.wallet.pushContract(window.store.manager,window.store.address);
 
   Vue.component('editor', require('./avatar/editor.vue').default);
 
@@ -191,9 +188,9 @@
         KEYS:KEYS,
         wallet:window.wallet,
         address: {
-          AVATAR:aMgr.address,
-          STORE:sMgr.address,
-          CREATOR:sMgr.address,
+          AVATAR:window.config.address,
+          STORE:window.store.address,
+          CREATOR:window.store.address,
         },
         github:{
           WALLET:'https://github.com/Nitro888/nitro888.github.io',
@@ -367,7 +364,7 @@
                                     contract:(address)=>{this.showContract(contract.key,address);}
                                   }});
             else {
-              let index = list.findIndex(x=>x.store==store);
+              let index = list.findIndex(x=>x.from==owner);
               if(index>-1)
                 list.splice(index,1);
             }
@@ -380,12 +377,12 @@
           let address   = '';
           let data      = null;
           switch (this.contract.key) {
-            case KEYS['ERC20WALLET']['KEY']:    address   = aMgr.address; data = this._erc20Wallet(address,this._json(this.json),this._json(this.data)); break;
-            case KEYS['STORE_AVATAR']['KEY']:   address   = aMgr.address; data = this._avatar(address,this._json(this.json),this._json(this.data)); break;
-            case KEYS['BADGE']['KEY']:          address   = aMgr.address; data = this._badge(address,this._json(this.json),this._json(this.data)); break;
-            case KEYS['STORE_CONTENTS']['KEY']: address   = sMgr.address; data = this._store(address,this._json(this.json),this._json(this.data));  break;
-            case KEYS['PACK']['KEY']:           address   = sMgr.address; data = this._pack(address,this._json(this.json),this._json(this.data));   break;
-            case KEYS['CREATOR']['KEY']:        address   = sMgr.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
+            case KEYS['ERC20WALLET']['KEY']:    address   = window.config.address; data = this._erc20Wallet(address,this._json(this.json),this._json(this.data)); break;
+            case KEYS['STORE_AVATAR']['KEY']:   address   = window.config.address; data = this._avatar(address,this._json(this.json),this._json(this.data)); break;
+            case KEYS['BADGE']['KEY']:          address   = window.config.address; data = this._badge(address,this._json(this.json),this._json(this.data)); break;
+            case KEYS['STORE_CONTENTS']['KEY']: address   = window.store.address; data = this._store(address,this._json(this.json),this._json(this.data));  break;
+            case KEYS['PACK']['KEY']:           address   = window.store.address; data = this._pack(address,this._json(this.json),this._json(this.data));   break;
+            case KEYS['CREATOR']['KEY']:        address   = window.store.address; data = this._creator(address,this._json(this.json),this._json(this.data));break;
           }
 
           //console.log(data);
@@ -467,28 +464,28 @@
         let contract = {address:'',topic0:'',key:key};
         switch (key) {
           case KEYS['ERC20WALLET']['KEY']:
-            contract['address'] = aMgr.address;
-            contract['topic0']  = this.wallet.findABI(aMgr.manager,'WALLET')['signature'];
+            contract['address'] = window.config.address;
+            contract['topic0']  = this.wallet.findABI(window.config.manager,'WALLET')['signature'];
             break;
           case KEYS['STORE_AVATAR']['KEY']:
-            contract['address'] = aMgr.address;
-            contract['topic0']  = this.wallet.findABI(aMgr.manager,'STORE')['signature'];
+            contract['address'] = window.config.address;
+            contract['topic0']  = this.wallet.findABI(window.config.manager,'STORE')['signature'];
             break;
           case KEYS['BADGE']['KEY']:
-            contract['address'] = aMgr.address;
-            contract['topic0']  = this.wallet.findABI(aMgr.manager,'BADGE')['signature'];
+            contract['address'] = window.config.address;
+            contract['topic0']  = this.wallet.findABI(window.config.manager,'BADGE')['signature'];
             break;
           case KEYS['STORE_CONTENTS']['KEY']:
-            contract['address'] = sMgr.address;
-            contract['topic0']  = this.wallet.findABI(sMgr.manager,'STORE')['signature'];
+            contract['address'] = window.store.address;
+            contract['topic0']  = this.wallet.findABI(window.store.manager,'STORE')['signature'];
             break;
           case KEYS['PACK']['KEY']:
-            contract['address'] = sMgr.address;
-            contract['topic0']  = this.wallet.findABI(sMgr.manager,'PACK')['signature'];
+            contract['address'] = window.store.address;
+            contract['topic0']  = this.wallet.findABI(window.store.manager,'PACK')['signature'];
             break;
           case KEYS['CREATOR']['KEY']:
-            contract['address'] = sMgr.address;
-            contract['topic0']  = this.wallet.findABI(sMgr.manager,'CREATOR')['signature'];
+            contract['address'] = window.store.address;
+            contract['topic0']  = this.wallet.findABI(window.store.manager,'CREATOR')['signature'];
             break;
         }
 
@@ -522,7 +519,7 @@
           this.$refs.refModalContract.show();
       },
       showErc20Wallet(key,address,error=null,success=null) {
-        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.isWallet(address),this.wallet.findABI(aMgr.wallet,'INFO'),
+        this._showContract(key,address,this.wallet.contract[window.config.address].c.methods.isWallet(address),this.wallet.findABI(window.config.wallet,'INFO'),
           (r,json)=>{
             this.data.owner = r;
             if(!success)
@@ -530,7 +527,7 @@
         });
       },
       showAvatar(key,address,error=null,success=null) {
-        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.about(address),this.wallet.findABI(aMgr.avatar,'INFO'),
+        this._showContract(key,address,this.wallet.contract[window.config.address].c.methods.about(address),this.wallet.findABI(window.config.avatar,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             this.data.erc20 = r[2];
@@ -541,7 +538,7 @@
         });
       },
       showBadge(key,address,error=null,success=null) {
-        this._showContract(key,address,this.wallet.contract[aMgr.address].c.methods.status(address,this.wallet.address()),this.wallet.findABI(aMgr.badge,'INFO'),
+        this._showContract(key,address,this.wallet.contract[window.config.address].c.methods.status(address,this.wallet.address()),this.wallet.findABI(window.config.badge,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             //this.data.updater = r[1];
@@ -550,8 +547,8 @@
         });
       },
       showStore(key,address,error=null,success=null) {
-        let temp = new this.wallet.web3.eth.Contract(sMgr.store,address);
-        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(sMgr.store,'INFO'),
+        let temp = new this.wallet.web3.eth.Contract(window.store.store,address);
+        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(window.store.store,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright
@@ -561,8 +558,8 @@
         });
       },
       showPack(key,address,error=null,success=null) {
-        let temp = new this.wallet.web3.eth.Contract(sMgr.pack,address);
-        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(sMgr.pack,'INFO'),
+        let temp = new this.wallet.web3.eth.Contract(window.store.pack,address);
+        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(window.store.pack,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright
@@ -571,8 +568,8 @@
         });
       },
       showCreator(key,address,error=null,success=null) {
-        let temp = new this.wallet.web3.eth.Contract(sMgr.creator,address);
-        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(sMgr.creator,'INFO'),
+        let temp = new this.wallet.web3.eth.Contract(window.store.creator,address);
+        this._showContract(key,address,temp.methods.about(),this.wallet.findABI(window.store.creator,'INFO'),
           (r,json)=>{
             this.data.owner = r[0];
             //  = r[1];// copyright
