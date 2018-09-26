@@ -1,6 +1,6 @@
 <template>
   <div>
-    <fab  v-if="!isLogedIn"
+    <fab  v-if="!logedin"
           main-icon   ="clear"
           :position   ="position"
           :bg-color   ="bgColor[0]"
@@ -9,7 +9,7 @@
           @create     ="showCreate"
           @login      ="_login"
     ></fab>
-    <fab  v-if="isLogedIn"
+    <fab  v-if="logedin"
           main-icon   ="clear"
           :position   ="position"
           :bg-color   ="bgColor[1]"
@@ -89,7 +89,7 @@
   let wallet    = require('./wallet.js');
   let avatar    = require('../avatar/view.js');
   window.config = require('../abi/avatar.js');
-  window.wallet.pushContract(window.config.manager,window.config.address);
+  wallet.pushContract(window.config.manager,window.config.address);
 
   import fab from 'vue-fab';
 
@@ -140,9 +140,6 @@
           ]
         ],
 
-
-        wallet        :window.wallet,
-
         logedin       : false,
         avatarLoad    : false,
         avatarHas     : false,
@@ -157,13 +154,9 @@
         deposit       : '',
         txItems       : [],
         withdrawal    : {id:'',icon:'',balance:0,to:'',feedbackTo:'Please input address',amount:0,feedbackAmount:'Please input amount of coin',pw:'',statePw:true,feedbackPw:''}
-
       }
     },
     computed: {
-      isLogedIn: function () {
-        return this.wallet.web3&&this.wallet.address();
-      },
       createState: function () {
         return (this.create.pw0==this.create.pw1)&&this.create.pw0!='';
       },
@@ -197,12 +190,14 @@
           for(let i = 0 ; i < this.tokenList.length ; i++ )
             this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
 
-        /*
-        if(!this.avatarLoad&&wallet.address()) {
-          avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{this.avatarHas=true;avatar.view.load('avatarDropdown',wallet.address());});
+        if(!this.avatarLoad&&wallet.address()&&document.getElementById('avatarNavbar')) {
+          avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{
+            this.avatarHas=true;
+            if(document.getElementById('avatarDropdown'))
+              avatar.view.load('avatarDropdown',wallet.address());
+          });
           this.avatarLoad = true;
         }
-        */
       },
       _createOK() {
         if((this.create.pw0==this.create.pw1)&&this.create.pw0!='') {
@@ -223,6 +218,7 @@
         this.logedin    = wallet.address()!=null;
         this.avatarLoad = false;
         this.avatarHas  = false;
+        window.universal= [];
         this.update();
       },
       _withdrawalOK() {
@@ -251,7 +247,7 @@
         // todo : load from cookie
       },
       _loginOK() {
-        wallet.callback = this.update
+        wallet.callback = this.update;
         wallet.login(this.login.pw,wallet.keyObject?wallet.keyObject:this.login.temp,
           (e)=>{
             this.login.state      = false;
@@ -266,32 +262,47 @@
             this.login.feedback   = "Login success";
             this.login.pw         = '';
             this.logedin          = wallet.address()!=null;
-            this._loadUniversalWallet();
+            this._loadUniversalWallets();
             this.$refs.refModal.hide();
           });
       },
-      _loadUniversalWallet() {
+      _loadUniversalWallets() {
         let topics  = 'topic0='+wallet.findABI(window.config.manager,'WALLET')['signature']
                     +'&topic2='+wallet.web3.utils.padLeft(wallet.address(),64)
                     +'&topic3='+wallet.web3.utils.padLeft(wallet.address(),64)
                     +'&topic2_3_opr=or';
         wallet.logs(window.config.address,topics,(data)=>{
           window.universal = [];
+          window.universal.push({ value:wallet.address(), text:wallet.address()+" (key)", owner:'', from:'', address:wallet.address(), info : null});
           for(let i = 0 ; i < data.length ; i++) {
             let address = '0x'+data[i].topics[1].toString().slice(-40).toLowerCase();
             let owner   = '0x'+data[i].topics[2].toString().slice(-40).toLowerCase();
             let from    = '0x'+data[i].topics[3].toString().slice(-40).toLowerCase();
 
-            if(owner==this.wallet.address().toLowerCase())
-              window.universal.push({ key:address, owner:owner, from:from, name : ''});
+            if(owner==wallet.address().toLowerCase())
+              window.universal.push({ value:address, text:address, owner:owner, from:from, address:address, info : null});
             else {
               let index = window.universal.findIndex(x=>x.from==owner);
               if(index>-1)
                 window.universal.splice(index,1);
             }
           }
-          console.log(window.universal);
+          this._loadUniversalWalletInfo(1);
         });
+      },
+      _loadUniversalWalletInfo(index){
+        if(index<window.universal.length) {
+          let abi     = wallet.findABI(window.config.wallet,'INFO');
+          let topics  = 'topic0='+wallet.web3.eth.abi.encodeEventSignature(abi);
+          wallet.logs(window.universal[index].address,topics,(data)=>{
+            if(data.length>0) {
+              let temp    = wallet.web3.eth.abi.decodeLog(abi['inputs'],data[data.length-1].data,data[data.length-1].topics);
+              let json    = msgpack.decode(wallet.web3.utils.hexToBytes(temp['_msgPack']));
+              window.universal[index].text  += " ("+json['title'] +")";
+              this._loadUniversalWalletInfo(index+1);
+            }
+          });
+        }
       },
       // showModal
       reset(show) {
@@ -356,8 +367,6 @@
         });
       }
       // showModal
-
-
     }
   }
 </script>

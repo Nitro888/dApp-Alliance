@@ -57,7 +57,10 @@
         </div>
       </div>
 
-      <b-form-group v-if="isLogedIn" size="sm" label="Password" class="mt-3" :invalid-feedback="contract.message" :valid-feedback="contract.message" :state="contract.state">
+      <b-form-group v-if="isLogedIn&&universal.tab.length>0&&editor.tab==0" size="sm" label="Select wallet" class="mt-3">
+        <b-form-select v-model="universal.selected" :options="universal.tab" size="sm"/>
+      </b-form-group>
+      <b-form-group v-if="isLogedIn" size="sm" label="Password" :invalid-feedback="contract.message" :valid-feedback="contract.message" :state="contract.state">
         <b-input-group size="sm">
           <b-input-group-text size="sm" v-if="editor.tab==0" slot="prepend">
               <small>{{price.token}}</small>
@@ -82,12 +85,12 @@
   let slider  = require('vue-color/src/components/Slider.vue');
   let avatar  = require('./view.js');
   const gzip  = avatar.gzip;
-  const aMgr  = require('../abi/avatar.js');
   Vue.component('slider-picker', slider.default);
   export default {
     data() {
       return {
         wallet      : window.wallet,
+        universal   : {selected:null,tab:[]},
         address     : '',
         height0     : 235,
         height1     : 235,
@@ -115,7 +118,7 @@
       }
     },
     created: function () {
-      this.manager        = new avatar.view.web3.eth.Contract(aMgr.manager,aMgr.address);
+      this.manager        = new avatar.view.web3.eth.Contract(window.config.manager,window.config.address);
     },
     updated: function () {
       this.$nextTick(function () {
@@ -143,6 +146,8 @@
         this.avatar.tab       = [];
         document.getElementById('avatarEditor').innerHTML = '';
         this.store.address    = address;
+        this.universal.selected = this.wallet.address();
+        this.universal.tab      = this.wallet.address()?window.universal:[];
         avatar.view.load('avatarEditor',this.wallet.address(),()=>{this.loadStore();this.$refs.refModalEditor.show();},(store)=>{this.store.address=store;this.loadStore();this.$refs.refModalEditor.show();});
       },
       matchHeight() {
@@ -252,7 +257,7 @@
           if(this.isAddress(this.price.erc20)) {
             // todo
           } else
-            this.wallet.sendTx(aMgr.address,this.contract.password,this.price.amount,data,(e)=>{this.contract.state=false;this.contract.message=e;},(h)=>{this.contract.state=true;this.contract.message="Tx:"+h;},(r)=>{this.contract.state=true;this.contract.message="Success";});
+            this.wallet.sendTx(window.config.address,this.contract.password,this.price.amount,data,(e)=>{this.contract.state=false;this.contract.message=e;},(h)=>{this.contract.state=true;this.contract.message="Tx:"+h;},(r)=>{this.contract.state=true;this.contract.message="Success";});
         }
       },
       uploadAsset(){
@@ -260,7 +265,7 @@
         if(this.isAddress(this.store.address)&&this.editor.assetFile) {
           this.contract.state     = true;
           this.contract.message   = "";
-          let temp  = new this.wallet.web3.eth.Contract(aMgr.avatar,this.address);
+          let temp  = new this.wallet.web3.eth.Contract(window.config.avatar,this.address);
           let data  = temp.methods.asset(this.editor.selected,this.wallet.web3.utils.bytesToHex(gzip.zip(this.editor.assetFile,{level:9}))).encodeABI();
           this.wallet.sendTx(this.store.address,this.contract.password,0,data,(e)=>{this.contract.state=false;this.contract.message=e;},(h)=>{this.contract.state=true;this.contract.message="Tx:"+h;},(r)=>{this.contract.state=true;this.contract.message="Success";});
         }

@@ -6,27 +6,27 @@ window.wallet	= new function() {
   this.balances   = {},
   this.erc20abi   = [{"constant": true,"inputs": [],"name": "name","outputs": [{"name": "","type": "string"}],"payable": false,"type": "function"},{"constant": true,"inputs": [],"name": "decimals","outputs": [{"name": "","type": "uint8"}],"payable": false,"type": "function"},{"constant": true,"inputs": [{"name": "_owner","type": "address"}],"name": "balanceOf","outputs": [{"name": "balance","type": "uint256"}],"payable": false,"type": "function"},{"constant": true,"inputs": [],"name": "symbol","outputs": [{"name": "","type": "string"}],"payable": false,"type": "function"}],
   this.start	= function() {
-		wallet.loadJson('wallet.json',(err,data)=>{
+		window.wallet.loadJson('wallet.json',(err,data)=>{
 			if(err) {
 				console.log(err);
 			} else {
-				wallet.option   = data;
+				window.wallet.option   = data;
 
-		    if(wallet.option['type']=="http") {
-					wallet.web3		= new Web3(new Web3.providers.HttpProvider(wallet.option['network'][wallet.option['type']]));
-					setInterval(()=>{wallet.update();if(wallet.callback)wallet.callback();},60000);
+		    if(window.wallet.option['type']=="http") {
+					window.wallet.web3		= new Web3(new Web3.providers.HttpProvider(window.wallet.option['network'][window.wallet.option['type']]));
+					setInterval(()=>{window.wallet.update();if(window.wallet.callback)window.wallet.callback();},60000);
 				} else {
-					wallet.web3		= new Web3(new Web3.providers.WebsocketProvider(wallet.option['network'][wallet.option['type']]));
-					wallet.web3.eth.subscribe('newBlockHeaders',()=>{wallet.update();if(wallet.callback)wallet.callback();});
+					window.wallet.web3		= new Web3(new Web3.providers.WebsocketProvider(window.wallet.option['network'][window.wallet.option['type']]));
+					window.wallet.web3.eth.subscribe('newBlockHeaders',()=>{window.wallet.update();if(window.wallet.callback)window.wallet.callback();});
 				}
 
-		    wallet.balances['0x0']  = {'contract':null,'balance':-1,'name':'ETH','icon':'<i class="fab fa-ethereum"></i>'};
-				wallet.addERC20s(data['erc20s'],0);
+		    window.wallet.balances['0x0']  = {'contract':null,'balance':-1,'name':'ETH','icon':'<i class="fab fa-ethereum"></i>'};
+				window.wallet.addERC20s(data['erc20s'],0);
 
-				wallet.createContracts();
-				wallet.update();
+				window.wallet.createContracts();
+				window.wallet.update();
 
-				console.log("web3 :"+wallet.web3.version);
+				console.log("web3 :"+window.wallet.web3.version);
 			}
 		});
 		return wallet;
@@ -34,40 +34,40 @@ window.wallet	= new function() {
 	this.addERC20s	= function(erc20s,index) {
 		if(index<erc20s.length) {
 			let erc20 = erc20s[index];
-			if(!wallet.balances[erc20[0]]) {
-				wallet.balances[erc20[0]] = {'contract':new wallet.web3.eth.Contract(wallet.erc20abi,erc20[0]),'balance':-1,'name':erc20[1],'icon':erc20[2]};
+			if(!window.wallet.balances[erc20[0]]) {
+				window.wallet.balances[erc20[0]] = {'contract':new window.wallet.web3.eth.Contract(window.wallet.erc20abi,erc20[0]),'balance':-1,'name':erc20[1],'icon':erc20[2]};
 				if(erc20[1]=='') {
-					wallet.balances[erc20[0]]['contract'].methods.name().call((e,r)=>{if(!e){wallet.balances[erc20[0]].name=r;} wallet.addERC20s(erc20s,index+1);});
+					window.wallet.balances[erc20[0]]['contract'].methods.name().call((e,r)=>{if(!e){window.wallet.balances[erc20[0]].name=r;} window.wallet.addERC20s(erc20s,index+1);});
 				} else {
-					wallet.addERC20s(erc20s,index+1);
+					window.wallet.addERC20s(erc20s,index+1);
 				}
 			}
 		}
 	},
 	this.pushContract = function (abi,address) {
-		if(!wallet.contract[address])
-			wallet.contract[address]	= {a:abi,c:!wallet.web3?null:new wallet.web3.eth.Contract(abi,address)};
+		if(!window.wallet.contract[address])
+			window.wallet.contract[address]	= {a:abi,c:!window.wallet.web3?null:new window.wallet.web3.eth.Contract(abi,address)};
 	},
 	this.createContracts = function () {
-		if(!wallet.web3)
+		if(!window.wallet.web3)
 			return;
-		for (var address in wallet.contract)
-			if(!wallet.contract[address].c)
-				wallet.contract[address].c	= new wallet.web3.eth.Contract(wallet.contract[address].a,address);
+		for (var address in window.wallet.contract)
+			if(!window.wallet.contract[address].c)
+				window.wallet.contract[address].c	= new window.wallet.web3.eth.Contract(window.wallet.contract[address].a,address);
 	},
   this.update			= function() {
-    if(wallet.address()) {
-			for (let erc20 in wallet.balances)
-				wallet.getBalance(erc20,wallet.callback);
+    if(window.wallet.address()) {
+			for (let erc20 in window.wallet.balances)
+				window.wallet.getBalance(erc20,window.wallet.callback);
     }
   },
 	this.getBalance	= function(erc20,callback) {
-		if(!wallet.address())
+		if(!window.wallet.address())
 			return;
 		if(erc20=='0x0')
-			wallet.web3.eth.getBalance(wallet.address(),(e,r)=>{if(!e){wallet.balances[erc20]['balance']=parseInt(r);if(callback)callback();}});
-		else if(wallet.balances[erc20])
-			wallet.balances[erc20]['contract'].methods.balanceOf(wallet.address()).call((e,r)=>{if(!e){wallet.balances[erc20]['balance']=parseInt(r);if(callback)callback();}});
+			window.wallet.web3.eth.getBalance(window.wallet.address(),(e,r)=>{if(!e){window.wallet.balances[erc20]['balance']=parseInt(r);if(callback)callback();}});
+		else if(window.wallet.balances[erc20])
+			window.wallet.balances[erc20]['contract'].methods.balanceOf(window.wallet.address()).call((e,r)=>{if(!e){window.wallet.balances[erc20]['balance']=parseInt(r);if(callback)callback();}});
 	}
 
 	// create
@@ -80,59 +80,59 @@ window.wallet	= new function() {
 
 	// login
 	this.login	= function(password,keyObject,error,success) {
-		if(!wallet.web3) {
+		if(!window.wallet.web3) {
 			if(error)
 				error("web3 error");
 			return;
 		} else {
 			try {
-				wallet.keyObject	= keyObject;
+				window.wallet.keyObject	= keyObject;
 				keythereum.recover(password, keyObject);
-				wallet.update();
-				if(wallet.callback)
-					wallet.callback();
+				window.wallet.update();
+				if(window.wallet.callback)
+					window.wallet.callback();
 				if(success)
-					success(wallet.address());
+					success(window.wallet.address());
 			} catch (e) {
-				wallet.keyObject	= null;
+				window.wallet.keyObject	= null;
 				if(error)
 					error(e);
 			}
 		}
 	},
 	this.address = function () {
-		return wallet.keyObject?'0x'+wallet.keyObject.address:null;
+		return window.wallet.keyObject?'0x'+window.wallet.keyObject.address:null;
 	},
 	this.addressQR	= function() {
-		return '<img src="https://api.qrserver.com/v1/create-qr-code/?data='+wallet.address()+'&size=256x256 alt="" width="256" height="256"/>';
+		return '<img src="https://api.qrserver.com/v1/create-qr-code/?data='+window.wallet.address()+'&size=256x256 alt="" width="256" height="256"/>';
 	},
 	this.addressLNK = function () {
-		return wallet.option['network']['href']+"/address/"+wallet.address();
+		return window.wallet.option['network']['href']+"/address/"+window.wallet.address();
 	},
 	this.txLNK = function (txHash) {
-		return wallet.option['network']['href']+"/tx/"+txHash;
+		return window.wallet.option['network']['href']+"/tx/"+txHash;
 	},
 	this.isAddress = function (who) {
-		return wallet.web3?wallet.web3.utils.isAddress(who):false;
+		return window.wallet.web3?window.wallet.web3.utils.isAddress(who):false;
 	},
 
 	// logout
 	this.logout	= function(password,callback) {
-		wallet.keyObject			= null;
+		window.wallet.keyObject			= null;
 		if(callback)
 			callback("logout");
 	},
 
 	// transfer
 	this.transfer	= function(to,password,erc20,amount,error=null,hash=null,success=null) {
-		if(wallet.address())
-			wallet.getBalance(erc20,()=>{
-				amount = wallet.web3.utils.toWei(amount,'ether');
-				if(wallet.balances[erc20]['balance']>amount) {
+		if(window.wallet.address())
+			window.wallet.getBalance(erc20,()=>{
+				amount = window.wallet.web3.utils.toWei(amount,'ether');
+				if(window.wallet.balances[erc20]['balance']>amount) {
 					if(erc20=='0x0')
-						wallet.sendTx(to,password,amount,null,error,hash,success);
+						window.wallet.sendTx(to,password,amount,null,error,hash,success);
 					else
-						wallet.sendTx(to,password,0,wallet.web3.utils.toWei(0,'ether'),wallet.balances[erc20]['contract'].methods.transfer(amount).encodeABI(),error,hash,success);
+						window.wallet.sendTx(to,password,0,window.wallet.web3.utils.toWei(0,'ether'),window.wallet.balances[erc20]['contract'].methods.transfer(amount).encodeABI(),error,hash,success);
 				} else {
 					if(error)
 						error('Out of balance');
@@ -142,36 +142,36 @@ window.wallet	= new function() {
 
 	// sendTx
 	this.sendTx	= function(to,password,amount,data=null,error=null,hash=null,success=null) {
-		if(wallet.address()) {
-			let privateKey	= wallet.getPrivateKeyString(password);
+		if(window.wallet.address()) {
+			let privateKey	= window.wallet.getPrivateKeyString(password);
 
-			if(privateKey!=null&&wallet.isAddress(to)) {
-				wallet.web3.eth.getGasPrice((e,gasPrice)=>{
+			if(privateKey!=null&&window.wallet.isAddress(to)) {
+				window.wallet.web3.eth.getGasPrice((e,gasPrice)=>{
 					if(e!=null) {
 						if(error)
 							error("Fail get gas price");
 					} else {
-						let tx = {'from':wallet.address(),'to':to,'value':wallet.web3.utils.toHex(amount)};
+						let tx = {'from':window.wallet.address(),'to':to,'value':window.wallet.web3.utils.toHex(amount)};
 						if(data!=null)	tx['data']	= data;
-						wallet.web3.eth.estimateGas(tx).then((gasLimit)=>{
-							tx['gasPrice']	= wallet.web3.utils.toHex(parseInt(gasPrice));
-							tx['gasLimit']	= wallet.web3.utils.toHex(parseInt(gasLimit));
-							wallet.web3.eth.accounts.privateKeyToAccount('0x'+privateKey).signTransaction(tx).then((r)=>{
-								wallet.web3.eth.sendSignedTransaction(r.rawTransaction)
+						window.wallet.web3.eth.estimateGas(tx).then((gasLimit)=>{
+							tx['gasPrice']	= window.wallet.web3.utils.toHex(parseInt(gasPrice));
+							tx['gasLimit']	= window.wallet.web3.utils.toHex(parseInt(gasLimit));
+							window.wallet.web3.eth.accounts.privateKeyToAccount('0x'+privateKey).signTransaction(tx).then((r)=>{
+								window.wallet.web3.eth.sendSignedTransaction(r.rawTransaction)
 									.on('transactionHash',(r0)=>{
 										if(hash)
 											hash(r0);
 									}).then((r1)=>{
 										if(success)
 											success(r1);
-										wallet.update();
+										window.wallet.update();
 									}).catch((e)=>{if(error)error(e);});
 							});
 						});
 					}
 				});
 			} else {
-				if(error&&wallet.isAddress(to))
+				if(error&&window.wallet.isAddress(to))
 					error("Wrong password");
 			}
 		}
@@ -179,7 +179,7 @@ window.wallet	= new function() {
 	this.getPrivateKeyString	= function(password) {
 		let privateKey	= null;
 		try {
-			let temp		= keythereum.recover(password, wallet.keyObject);
+			let temp		= keythereum.recover(password, window.wallet.keyObject);
 			privateKey	= Array.prototype.map.call(temp, x => ('00' + x.toString(16)).slice(-2)).join('');
 		} catch (e) {
 			privateKey	= null;
@@ -189,37 +189,37 @@ window.wallet	= new function() {
 
 	// txHistory
 	this.txHistory	= function(erc20, callback) {
-		if(wallet.address()) {
+		if(window.wallet.address()) {
 			if(erc20=="0x0")
-				wallet.txNormal(wallet.address(),(data0)=>{
-						wallet.txInternal(wallet.address(),(data1)=>{
+				window.wallet.txNormal(window.wallet.address(),(data0)=>{
+						window.wallet.txInternal(window.wallet.address(),(data1)=>{
 							let total = data0.concat(data1);
 							total.sort(function(a, b){return parseInt(b.blockNumber)-parseInt(a.blockNumber);});
 							callback(total);
 						});
 				});
 			else
-				wallet.txERC20(erc20,wallet.address(),callback);
+				window.wallet.txERC20(erc20,window.wallet.address(),callback);
 		}
 	},
 	// transaction history
 	this.txNormal	= function(address,callback) {
-		let url	= wallet.option['network']['api']+"/api?module=account&action=txlist&address="+address+"&startblock=0&endblock=latest&sort=desc";
-		wallet.loadJson(url,(err,data)=>{if(!err)callback(data.result);});
+		let url	= window.wallet.option['network']['api']+"/api?module=account&action=txlist&address="+address+"&startblock=0&endblock=latest&sort=desc";
+		window.wallet.loadJson(url,(err,data)=>{if(!err)callback(data.result);});
 	},
 	this.txInternal	= function(address,callback) {
-		let url	= wallet.option['network']['api']+"/api?module=account&action=txlistinternal&address="+address+"&startblock=0&endblock=latest&sort=desc";
-		wallet.loadJson(url,(err,data)=>{if(!err)callback(data.result);});
+		let url	= window.wallet.option['network']['api']+"/api?module=account&action=txlistinternal&address="+address+"&startblock=0&endblock=latest&sort=desc";
+		window.wallet.loadJson(url,(err,data)=>{if(!err)callback(data.result);});
 	},
 	this.txERC20	= function (erc20,address,callback) {
-		let url	= wallet.option['network']['api']+'/api?module=account&action=tokentx&contractaddress='+erc20+'&address='+address+'&startblock=0&endblock=latest&sort=asc';
-		wallet.loadJson(url,(err,data)=>{if(!err)callback(data.result);});
+		let url	= window.wallet.option['network']['api']+'/api?module=account&action=tokentx&contractaddress='+erc20+'&address='+address+'&startblock=0&endblock=latest&sort=asc';
+		window.wallet.loadJson(url,(err,data)=>{if(!err)callback(data.result);});
 	},
 	this.logs	= function(address,topics,callback) {
-		let url	= wallet.option['network']['api']+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+address;
+		let url	= window.wallet.option['network']['api']+'/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address='+address;
 		if(topics!='')
 			url +='&'+topics;
-		wallet.loadJson(url,(err,data)=>{if(!err)callback(data.result);});
+		window.wallet.loadJson(url,(err,data)=>{if(!err)callback(data.result);});
 	},
 
 	// json
