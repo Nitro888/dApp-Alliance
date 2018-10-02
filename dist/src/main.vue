@@ -232,7 +232,7 @@
             inputs:[
               { input:true,key:KEYS['STORE_AVATAR']['KEY'],address:'',state:true,
                 title:'How to get your avatar store.',
-                desc:'After login, click <i class="fas fa-plus"></i> button, and write avatar store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'},
+                desc:'After login, click <i class="fas fa-plus"></i> button, and write avatar store name, ERC20 contract address or \'0x0\' for Ethereum, and set price of making avatar. You can also change the price of making avatar after creation.<br/>And input a password and click <i class="fas fa-handshake"></i> button.<br/>Sample store is "0xd3f6f8677f875cec8ddde00cafb6ea558bab71dc"'},
               { input:true,key:KEYS['BADGE']['KEY'],address:'',state:true,
                 title:'How to get your badge store.',
                 desc:'After login, click <i class="fas fa-plus"></i> button, and write badge store name and etc.<br/>And input a password and click <i class="fas fa-handshake"></i> button.'}]

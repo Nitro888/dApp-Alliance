@@ -148,7 +148,7 @@
         this.store.address    = address;
         this.universal.selected = this.wallet.address();
         this.universal.tab      = this.wallet.address()?window.universal:[];
-        avatar.view.load('avatarEditor',this.wallet.address(),()=>{this.loadStore();this.$refs.refModalEditor.show();},(store)=>{this.store.address=store;this.loadStore();this.$refs.refModalEditor.show();});
+        avatar.view.load('avatarEditor',this.wallet.address(),(store)=>{this.store.address=store;this.loadStore();this.$refs.refModalEditor.show();});
       },
       matchHeight() {
         this.height0  = this.$refs.height0&&this.$refs.height0.clientHeight>0?this.$refs.height0.clientHeight:235;

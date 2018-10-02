@@ -191,7 +191,7 @@
             this.tokenList[i].balance = wallet.web3.utils.fromWei(wallet.balances[this.tokenList[i].id].balance.toString(),'ether');
 
         if(!this.avatarLoad&&wallet.address()&&document.getElementById('avatarNavbar')) {
-          avatar.view.load('avatarNavbar',wallet.address(),null,(store)=>{
+          avatar.view.load('avatarNavbar',wallet.address(),(store)=>{
             this.avatarHas=true;
             if(document.getElementById('avatarDropdown'))
               avatar.view.load('avatarDropdown',wallet.address());
