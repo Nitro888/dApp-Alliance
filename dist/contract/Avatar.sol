@@ -1,262 +1,331 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.25;
 
 import "./Wallet.sol";
 
-contract Badge is _Base {
-    constructor(bytes _msgPack) _Base(_msgPack) public {}
-    // register asset
-    event ASSET(uint8 indexed _index, string _title, bytes _img);
-    function asset(uint8 _index, string _title, bytes _image) onlyOwner public {
+//-----------------------------------------------------------------------------------------------
+contract Badge is _Info {
+    address                     updater;
+    mapping(address=>uint256)   status;
+
+    constructor(bytes _msgPack) _Info(_msgPack) public {updater=msg.sender;}
+
+    //-------------------------------------------------------
+    // register assets
+    //-------------------------------------------------------
+    event ASSET(uint8 indexed _category, uint8 indexed _index, string _title, bytes _img);
+    function asset(uint8 _category, uint8 _index, string _title, bytes _img) onlyHandler public {
         require(_index>0);
-        emit ASSET(_index,_title,_image);
+        emit ASSET(_category,_index,_title,_img);
+    }
+
+    //-------------------------------------------------------
+    // update badge
+    //-------------------------------------------------------
+    function setUpdater(address _newUpdater) onlyHandler public {
+        updater = _newUpdater;
+    }
+    function update(address _user, uint8 _newBadge) public {
+        require(msg.sender==updater);
+        status[_user] |= (1<<uint256(_newBadge-1));
+    }
+    function about(address _user) constant public returns(uint256) {
+        return status[_user];
     }
 }
+//-----------------------------------------------------------------------------------------------
 
-contract Avatar is _Base, _ApproveAndCallFallBack, SafeMath {
-    constructor(bytes _msgPack) _Base(_msgPack) public {}
-    // register asset
-    uint256                         index;
+//-----------------------------------------------------------------------------------------------
+contract Avatar is _Info, _Store, SafeMath {
+    uint256                     price;
+    uint256                     stamp;
+
+    mapping(address=>uint256)   stamps;
+    mapping(address=>uint256)   coupons;
+    uint256                     totalSupply;
+
+    constructor(address _erc20, uint256 _price, uint256 _stamp, bytes _msgPack) _Info(_msgPack) public {
+        erc20   = _erc20;
+        price   = _price;
+        stamp   = _stamp;
+    }
+
+    function update(uint256 _price, uint256 _stamp) onlyHandler public {
+        price   = _price;
+        stamp   = _stamp;
+    }
+
+    function about(address _user) constant public returns(uint256, uint256, uint256, uint256, uint256) {
+        return (price, stamp, stamps[_user], coupons[_user], totalSupply);
+    }
+
+    //-------------------------------------------------------
+    // register assets
+    //-------------------------------------------------------
+    uint256                     index;
     event ASSET(uint256 indexed _category, uint256 indexed _index, bytes _img);
-    function asset(uint256 _category, bytes _image) onlyOwner public {
-        emit ASSET(_category,index,_image);
+    function asset(uint256 _category, bytes _img) onlyHandler public {
+        emit ASSET(_category,index,_img);
         index   = safeAdd(index,1);
     }
+
+    //-------------------------------------------------------
+    // register setting
+    //-------------------------------------------------------
     event SETTING(bytes _msgPack);
-    function setting(bytes _msgPack) onlyOwner public {
+    function setting(bytes _msgPack) onlyHandler public {
         emit SETTING(_msgPack);
     }
 
-    // _ApproveAndCallFallBack
-    function erc20() public constant returns (address) {
-        bool    _copyright;
-        address _erc20;
-        (_copyright,_erc20) = Manager(manager).currency();
-        require(_copyright);
-        return _erc20;
+    //-------------------------------------------------------
+    // coupon
+    //-------------------------------------------------------
+    event COUPON(address indexed _to, address indexed _from, uint256 _count);
+    function mint(address _who, uint256 _count) private {
+        coupons[_who]   = safeAdd(coupons[_who],_count);
+        totalSupply     = safeAdd(totalSupply,_count);
+        emit COUPON(_who,address(0),_count);
     }
-    function spender() public constant returns (address) {
-        return manager;
+    function burn(address _who, uint256 _count) private {
+        _count = min(_count,coupons[_who]);
+        coupons[_who]   = safeSub(coupons[_who],_count);
+        totalSupply     = safeSub(totalSupply,_count);
+        emit COUPON(address(0),_who,_count);
     }
-    function receiveApproval(uint256[] _data) payable public {
+    function gift(address _who, uint256 _count) onlyHandler public {
+        mint(_who,_count);
+    }
+
+    //-------------------------------------------------------
+    // _Store
+    //-------------------------------------------------------
+    function checkIn(bool _in, bytes _msgPack) onlyHandler public {
+        _Portal(_Root(root).portal()).checkIn(_in,_msgPack);
+    }
+    function voteFor() public constant returns (address) {
+        return this;
+    }
+    function pay(uint256[2][] _items) payable public {
         revert();
     }
-    function receiveApproval(bytes _msgPack) payable public {
-        Manager(manager).receiveApproval(msg.sender,_msgPack);
-    }
-}
+    function pay(bytes _msgPack) payable public {
+        require(_Root(root).isEnable(this));
+        uint256 _value = erc20==address(0)?msg.value:min(_ERC20Interface(erc20).allowance(msg.sender,this),_ERC20Interface(erc20).balanceOf(msg.sender));
+        require(price==0||(_value>=price)||coupons[msg.sender]>0);
 
-contract Manager is SafeMath {
-    enum CLASS       {NONE,WALLET,STORE,BADGE}
-    struct _owner {
-        CLASS                           class;
-        address                         owner;
-    }
-    struct _badge {
-        address                         owner;
-        address                         updater;
-        mapping(address=>uint256[4])    status;
-    }
-    struct _store {
-        address                         owner;
-        bool                            copyright;
-        address                         erc20;
-        uint256                         price;
+        if(price>0) {
+            if(_value>=price) {
+                if(stamp>0) {
+                    stamps[msg.sender]  = safeAdd(stamps[msg.sender],1);
+                    if(stamps[msg.sender]%stamp==0)
+                        mint(msg.sender,1);
+                }
 
-        uint256                         totalSupply;
-        uint8                           stamp;
-        mapping(address=>uint256[2])    coupons;
-    }
-
-    address                     _master;
-
-    mapping(address=>_badge)    badges;
-    mapping(address=>_store)    stores;
-    mapping(address=>_owner)    owners;
-
-    constructor() public {_master = msg.sender;}
-
-    // modifiers
-    modifier onlyMaster() {
-        require(msg.sender==_master);
-        _;
-    }
-    modifier onlyOwner(address _contract) {
-        require(owner(_contract)==msg.sender);
-        _;
-    }
-    modifier onlyUpdater(address _contract) {
-        require (updater(_contract)==msg.sender);
-        _;
-    }
-    modifier onlyStore(address _contract) {
-        require(stores[_contract].copyright);
-        _;
-    }
-
-    // master
-    function master(address _next) onlyMaster public {
-        require(_next!=address(0)&&_next!=address(this)&&_next!=_master);
-        _master = _next;
-    }
-    // change copyright
-    function enable(address _contract, bool _enable) onlyMaster onlyStore(_contract) public {
-        stores[_contract].copyright  = _enable;
-    }
-
-    // change Owner
-    event WALLET(address indexed _contract, address indexed _to, address indexed _from);
-    event STORE(address indexed _contract, address indexed _to, address indexed _from);
-    event BADGE(address indexed _contract, address indexed _to, address indexed _from);
-    function owner(address _contract) constant public returns (address) {
-        return owners[_contract].owner;
-    }
-    function newOwner(address _contract, address _next) onlyOwner(_contract) public {
-        if(owners[_contract].class==CLASS.WALLET) {
-            emit WALLET(_contract,_next,owners[_contract].owner);
-            owners[_contract].owner = _next;
-        } else if(owners[_contract].class==CLASS.BADGE) {
-            emit BADGE(_contract,_next,owners[_contract].owner);
-            badges[_contract].owner = _next;
-            owners[_contract].owner = _next;
-        } else if(owners[_contract].class==CLASS.STORE) {
-            emit STORE(_contract,_next,owners[_contract].owner);
-            stores[_contract].owner = _next;
-            owners[_contract].owner = _next;
-        }
-    }
-
-    // create Wallet
-    function wallet(bytes _msgPack) public {
-        address temp    = new Wallet(_msgPack);
-        owners[temp]    = _owner(CLASS.WALLET,msg.sender);
-        emit WALLET(temp,msg.sender,address(0));
-    }
-    function isWallet(address _contract) constant public returns (address) {
-        return owners[_contract].class==CLASS.WALLET?owners[_contract].owner:address(0);
-    }
-
-    // create badge
-    function badge(bytes _msgPack) public {
-        address temp    = new Badge(_msgPack);
-        owners[temp]    = _owner(CLASS.BADGE,msg.sender);
-        badges[temp]    = _badge(msg.sender,msg.sender);
-        emit BADGE(temp,msg.sender,address(0));
-    }
-    function updater(address _contract) constant public returns (address) {
-        return badges[_contract].updater;
-    }
-    function newUpdater(address _contract, address _next) onlyOwner(_contract) public {
-        badges[_contract].updater   = _next;
-    }
-    // update user status
-    function rank(address _contract, address _user, uint256 _rank) onlyUpdater(_contract)  public {
-        badges[_contract].status[_user][0]   = _rank;
-    }
-    function level(address _contract, address _user, uint256 _level) onlyUpdater(_contract)  public {
-        badges[_contract].status[_user][1]   = _level;
-    }
-    function exp(address _contract, address _user, uint256 _exp) onlyUpdater(_contract)  public {
-        badges[_contract].status[_user][2]   = _exp;
-    }
-    function badge(address _contract, address _user, uint8 _newBadge) onlyUpdater(_contract)  public {
-        require(_newBadge>0);
-        badges[_contract].status[_user][3]   |= (1<<uint256(_newBadge-1));
-    }
-    // get user status
-    function status(address _contract, address _user) constant public returns (address,address,uint256[4]) {
-        return (badges[_contract].owner,badges[_contract].updater,badges[_contract].status[_user]);
-    }
-
-    // create Shop
-    event TOKEN(address indexed _contract, address indexed _erc20);
-    function store(bytes _msgPack, address _erc20, uint256 _price, uint8 _stamp) public {
-        address temp    = new Avatar(_msgPack);
-        owners[temp]    = _owner(CLASS.STORE,msg.sender);
-        stores[temp]    = _store(msg.sender,true,_erc20,_price,0,_stamp);
-        emit STORE(temp,msg.sender,address(0));
-        emit TOKEN(temp,_erc20);
-    }
-    // change price
-    function price(address _contract, uint256 _price, uint8 _stamp) onlyOwner(_contract) onlyStore(_contract) public {
-        stores[_contract].price   = _price;
-        stores[_contract].stamp   = _stamp;
-    }
-    function currency() constant public returns (bool,address) {
-        return (stores[msg.sender].copyright,
-                stores[msg.sender].erc20);
-    }
-    function about(address _contract) constant public returns (address, bool, address, uint256, uint256, uint256, uint256[2]) {
-        return (stores[_contract].owner,
-                stores[_contract].copyright,
-                stores[_contract].erc20,
-                stores[_contract].price,
-                stores[_contract].stamp,
-                stores[_contract].totalSupply,
-                stores[_contract].coupons[msg.sender]);
-    }
-
-    // coupon
-    event COUPON(address _contract, address indexed _to, address indexed _from, uint256 _count);
-    function coupon(address _contract, address _to, uint256 _count) onlyOwner(_contract) onlyStore(_contract) public {
-        mint(_contract,_to,_count);
-    }
-    function give(address _contract, address _to, uint256 _count) public {
-        require(stores[_contract].coupons[msg.sender][1]>=_count);
-        stores[_contract].coupons[msg.sender][1]= safeSub(stores[_contract].coupons[msg.sender][1],_count);
-        stores[_contract].coupons[_to][1]       = safeAdd(stores[_contract].coupons[_to][1],_count);
-        emit COUPON(_contract,_to,address(msg.sender),_count);
-    }
-    function mint(address _contract, address _to, uint256 _count) private {
-        stores[_contract].coupons[_to][1]       = safeAdd(stores[_contract].coupons[_to][1],_count);
-        stores[_contract].totalSupply           = safeAdd(stores[_contract].totalSupply,_count);
-        emit COUPON(_contract,_to,address(0),_count);
-    }
-    function burn(address _contract, address _from, uint256 _count) private {
-        stores[_contract].coupons[_from][1]     = safeSub(stores[_contract].coupons[_from][1],_count);
-        stores[_contract].totalSupply           = safeSub(stores[_contract].totalSupply,_count);
-        emit COUPON(_contract,address(0),_from,_count);
-    }
-
-    // register Avatar
-    event AVATAR (address indexed _user, address indexed _contract, bytes _msgPack);
-    function balanceOf(address _erc20, address _tokenOwner) private constant returns (uint balance) {
-        if(_erc20==address(0))
-            return address(this).balance;
-        return _ERC20Interface(_erc20).balanceOf(_tokenOwner);
-    }
-    function min(uint _a, uint _b) private pure returns (uint256) {
-        if(_a>_b)
-            return _b;
-        return _a;
-    }
-    function avatar(address _user, address _contract, uint256 _price, uint256 _value, bytes _msgPack) private {
-        if(_price>0) {
-            if(_value==0&&(stores[_contract].coupons[_user][1]>0))
-                burn(_contract, _user, 1);
-            else {
-                stores[_contract].coupons[_user][0]    = safeAdd(stores[_contract].coupons[_user][0],1);
-                if(stores[_contract].stamp>0&&(stores[_contract].coupons[_user][0]%stores[_contract].stamp)==0)
-                    mint(_contract,_user,1);
-                if(stores[_contract].erc20==address(0))
-                    stores[_contract].owner.transfer(_value);
+                if(erc20==address(0))
+                    _Root(root).handler(this).transfer(_value);
                 else
-                    _ERC20Interface(stores[_contract].erc20).transferFrom(_user,stores[_contract].owner,_value);
-            }
+                    _ERC20Interface(erc20).transferFrom(msg.sender,_Root(root).handler(this),_value);
+            } else
+                burn(msg.sender,1);
         }
-        emit AVATAR(_user,_contract,_msgPack);
-    }
-    function receiveApproval(address _user, bytes _msgPack) onlyStore(msg.sender) payable public {
-        uint256 _price  = stores[msg.sender].price;
-        uint256 _value  = min(stores[msg.sender].erc20==address(0)?msg.value:_ERC20Interface(stores[msg.sender].erc20).allowance(_user,this),balanceOf(stores[msg.sender].erc20,_user));
-        require(_price==0||(_value>0&&_value>=_price)||(_value==0&&stores[msg.sender].coupons[_user][1]>0));
 
-        avatar(_user, msg.sender, _price, _value, _msgPack);
-    }
-    function avatar(address _contract, bytes _msgPack) onlyStore(_contract) payable public {
-        uint256 _price  = stores[_contract].price;
-        uint256 _value  = min(stores[_contract].erc20==address(0)?msg.value:_ERC20Interface(stores[_contract].erc20).allowance(msg.sender,this),balanceOf(stores[_contract].erc20,msg.sender));
-        require(_price==0||(_value>0&&_value>=_price)||(_value==0&&stores[_contract].coupons[msg.sender][1]>0));
-
-        avatar(msg.sender, _contract, _price, _value, _msgPack);
+        _Root(root).update(msg.sender, _msgPack);
     }
 }
+//-----------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------------
+contract Root is _Root, SafeMath {
+    enum TYPE {ROOT,WALLET,AVATAR,BADGE}
+    struct KeySet {
+        address     _primary;
+        address     _handler;
+        uint        _until;
+    }
+    struct Member {
+        TYPE        _type;
+        uint256     _id;
+        bool        _enable;
+    }
+
+    address                     _portal;
+
+    mapping(uint256=>KeySet)    _id2KeySet;
+    mapping(address=>uint256)   _key2id;
+    mapping(address=>Member)    _members;
+    uint256                     _index;
+
+    uint256                     _wallets;
+    uint256                     _badges;
+    uint256                     _avatarStores;
+    uint256                     _avatarTotal;
+    uint256                     _avatarActive;
+    mapping(address=>bool)      _avatarUsers;
+
+    constructor(address _primaryKey) public {
+        listup(_primaryKey,msg.sender);
+        createMember(_primaryKey,this,TYPE.ROOT);
+        _portal = new Portal();
+    }
+
+    mapping(address=>bool)      _used;
+    //-------------------------------------------------------
+    // ownership
+    //-------------------------------------------------------
+    modifier onlyPrimary() {
+        require(msg.sender==_id2KeySet[1]._primary);
+        _;
+    }
+    modifier onlyHandler() {
+        require(msg.sender==_id2KeySet[1]._handler);
+        _;
+    }
+    modifier onlyMember(address _member) {
+        require(_members[_member]._id>0);
+        _;
+    }
+
+    //-------------------------------------------------------
+    //
+    //-------------------------------------------------------
+    event STATUS(address indexed _who, bool _state, bytes _msgPack);
+    function enable(address _who, bool _enable, bytes _msgPack) onlyHandler onlyMember(_who) public {
+        require(_members[_who]._enable!=_enable&&_members[_who]._type==TYPE.AVATAR);
+        _members[_who]._enable   = _enable;
+        emit STATUS(_who,_members[_who]._enable,_msgPack);
+    }
+
+    event WALLET(address indexed _who, uint256 indexed _to, uint256 indexed _from);
+    event BADGE(address indexed _who, uint256 indexed _to, uint256 indexed _from);
+    event AVATAR(address indexed _who, uint256 indexed _to, uint256 indexed _from);
+    function emitEvent(address _who, uint256 _from) private {
+        if(_members[_who]._type==TYPE.WALLET)       emit WALLET(_who,_members[_who]._id,_from);
+        else if(_members[_who]._type==TYPE.BADGE)   emit BADGE(_who,_members[_who]._id,_from);
+        else if(_members[_who]._type==TYPE.AVATAR)  emit AVATAR(_who,_members[_who]._id,_from);
+    }
+    function transfer(address _primaryKey, address _what) onlyMember(_what) public {
+        require(_id2KeySet[_members[_what]._id]._handler==msg.sender&&_key2id[_primaryKey]>0);
+        uint256 _from = _members[_what]._id;
+        _members[_what]._id = _key2id[_primaryKey];
+        emitEvent(_what,_from);
+    }
+    function resetHandler(address _newHandler) notSame(msg.sender,_newHandler) newKey(_newHandler) public {
+        require(_key2id[msg.sender]>0);
+        _id2KeySet[_key2id[msg.sender]] = KeySet(msg.sender,_newHandler,now+30 minutes);    // you can change primary key in 30 minutes
+        _used[_newHandler]              = true;
+    }
+    function resetPrimary(address _oldPrimary, address _newPrimary) notSame(msg.sender,_newPrimary) newKey(_newPrimary) public {
+        uint256 id = _key2id[_oldPrimary];
+        require(id>0&&_id2KeySet[id]._handler==msg.sender&&_id2KeySet[id]._until>now);
+        _id2KeySet[id]                  = KeySet(_newPrimary,msg.sender,0);
+        _used[_newPrimary]              = true;
+    }
+    function keyset(uint256 _id) constant public returns (address,address,uint256) {
+        return (_id2KeySet[_id]._primary,_id2KeySet[_id]._handler,_id2KeySet[_id]._until);
+    }
+    function key2id(address _primaryKey) constant public returns (uint256,address,uint256) {
+        return (_key2id[_primaryKey],_id2KeySet[_key2id[_primaryKey]]._handler,_id2KeySet[_key2id[_primaryKey]]._until);
+    }
+    function status(address _member) constant public returns (uint256,TYPE,bool) {
+        return (_members[_member]._id,_members[_member]._type,_members[_member]._enable);
+    }
+    function about() constant public returns (uint256,uint256,uint256,uint256,uint256) {
+        return (_wallets,_badges,_avatarStores,_avatarActive,_avatarTotal);
+    }
+
+    //-------------------------------------------------------
+    // Portal
+    //-------------------------------------------------------
+    function portal() constant public returns (address) {
+        return _portal;
+    }
+
+    //-------------------------------------------------------
+    //
+    //-------------------------------------------------------
+    function handler(address _member) constant public returns (address) {
+        return _id2KeySet[_members[_member]._id]._handler;
+    }
+    function isEnable(address _member) constant public returns (bool) {
+        return _members[_member]._enable&&_id2KeySet[_members[_member]._id]._handler!=address(0);
+    }
+
+    modifier notSame(address _key0,address _key1) {
+        require(_key0!=_key1);
+        _;
+    }
+    modifier newKey(address _key) {
+        require(!_used[_key]);
+        _;
+    }
+
+    function listup(address _primaryKey, address _handlerKey) private {
+        if(_key2id[_primaryKey]==0) {
+            _index  = safeAdd(_index,1);
+            _key2id[_primaryKey]    = _index;
+            _id2KeySet[_index]      = KeySet(_primaryKey,_handlerKey,0);
+
+            _used[_primaryKey]      = true;
+            _used[_handlerKey]      = true;
+        }
+    }
+    function createKeySet(address _primaryKey) notSame(_primaryKey,msg.sender) newKey(_primaryKey) newKey(msg.sender) public {
+        require(_key2id[_primaryKey]==0);
+        listup(_primaryKey,msg.sender);
+    }
+
+    //-------------------------------------------------------
+    //
+    //-------------------------------------------------------
+    modifier canCreate(address _primaryKey) {
+        require((_key2id[_primaryKey]==0&&!_used[_primaryKey]&&!_used[msg.sender])||(_key2id[_primaryKey]>0&&_id2KeySet[_key2id[_primaryKey]]._handler==msg.sender));
+        _;
+    }
+    function createMember(address _primaryKey, address _temp, TYPE _type) private returns (address) {
+        _members[_temp] = Member(_type,_key2id[_primaryKey],true);
+        emitEvent(_temp,0);
+        return _temp;
+    }
+
+    //-------------------------------------------------------
+    // Wallet
+    //-------------------------------------------------------
+    function wallet(address _primaryKey, bytes _msgPack) notSame(_primaryKey,msg.sender) canCreate(_primaryKey) public {
+        listup(_primaryKey,msg.sender);
+        createMember(_primaryKey,new Wallet(_msgPack),TYPE.WALLET);
+        _wallets    = safeAdd(_wallets,1);
+    }
+    function isWallet(address _who) constant public returns (bool) {
+        return _members[_who]._type==TYPE.WALLET;
+    }
+
+    //-------------------------------------------------------
+    // Badge
+    //-------------------------------------------------------
+    function badge(address _primaryKey, bytes _msgPack) notSame(_primaryKey,msg.sender) canCreate(_primaryKey) public {
+        listup(_primaryKey,msg.sender);
+        createMember(_primaryKey,new Badge(_msgPack),TYPE.BADGE);
+        _badges    = safeAdd(_badges,1);
+    }
+
+    //-------------------------------------------------------
+    // Avatar
+    //-------------------------------------------------------
+    event TOKEN(address indexed _who, address indexed _erc20);
+    function avatar(address _primaryKey, address _erc20, uint256 _price, uint8 _stamp, bytes _msgPack) notSame(_primaryKey,msg.sender) canCreate(_primaryKey) public {
+        listup(_primaryKey,msg.sender);
+        emit TOKEN(createMember(_primaryKey,new Avatar(_erc20,_price,_stamp,_msgPack),TYPE.AVATAR),_erc20);
+        _avatarStores    = safeAdd(_avatarStores,1);
+    }
+
+    event USER (address indexed _user, address indexed _who, bytes _msgPack);
+    function update(address _user, bytes _msgPack) public {
+        require(isEnable(msg.sender)&&_members[msg.sender]._type==TYPE.AVATAR);
+        emit USER(_user,msg.sender,_msgPack);
+        _avatarTotal        = safeAdd(_avatarTotal,1);
+        if(!_avatarUsers[_user]) {
+            _avatarUsers[_user] = true;
+            _avatarActive= safeAdd(_avatarActive,1);
+        }
+    }
+}
+//-----------------------------------------------------------------------------------------------
