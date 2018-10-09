@@ -7,7 +7,7 @@ contract Badge is _Info {
     address                     updater;
     mapping(address=>uint256)   status;
 
-    constructor(bytes _msgPack) _Info(_msgPack) public {updater=msg.sender;}
+    constructor(bytes _msgPack) _Info(msg.sender,_msgPack) public {updater=msg.sender;}
 
     //-------------------------------------------------------
     // register assets
@@ -36,6 +36,7 @@ contract Badge is _Info {
 
 //-----------------------------------------------------------------------------------------------
 contract Avatar is _Info, _Store, SafeMath {
+    address                     erc20;
     uint256                     price;
     uint256                     stamp;
 
@@ -43,10 +44,14 @@ contract Avatar is _Info, _Store, SafeMath {
     mapping(address=>uint256)   coupons;
     uint256                     totalSupply;
 
-    constructor(address _erc20, uint256 _price, uint256 _stamp, bytes _msgPack) _Info(_msgPack) public {
+    constructor(address _erc20, uint256 _price, uint256 _stamp, bytes _msgPack) _Info(msg.sender,_msgPack) public {
         erc20   = _erc20;
         price   = _price;
         stamp   = _stamp;
+    }
+
+    function currency() public constant returns (address) {
+        return erc20;
     }
 
     function update(uint256 _price, uint256 _stamp) onlyHandler public {
@@ -149,10 +154,10 @@ contract Root is _Root, SafeMath {
 
     address                     _portal;
 
+    uint256                     _index;
     mapping(uint256=>KeySet)    _id2KeySet;
     mapping(address=>uint256)   _key2id;
     mapping(address=>Member)    _members;
-    uint256                     _index;
 
     uint256                     _wallets;
     uint256                     _badges;
@@ -219,11 +224,17 @@ contract Root is _Root, SafeMath {
         _id2KeySet[id]                  = KeySet(_newPrimary,msg.sender,0);
         _used[_newPrimary]              = true;
     }
-    function keyset(uint256 _id) constant public returns (address,address,uint256) {
-        return (_id2KeySet[_id]._primary,_id2KeySet[_id]._handler,_id2KeySet[_id]._until);
+    function id2Handler(uint256 _id) constant public returns (address) {
+        return (_id2KeySet[_id]._handler);
     }
-    function key2id(address _primaryKey) constant public returns (uint256,address,uint256) {
-        return (_key2id[_primaryKey],_id2KeySet[_key2id[_primaryKey]]._handler,_id2KeySet[_key2id[_primaryKey]]._until);
+    function id2KeySet(uint256 _id) constant public returns (address,address) {
+        return (_id2KeySet[_id]._primary,_id2KeySet[_id]._handler);
+    }
+    function key2id(address _primaryKey) constant public returns (uint256) {
+        return (_key2id[_primaryKey]);
+    }
+    function member2id(address _member) constant public returns (uint256) {
+        return _members[_member]._id;
     }
     function status(address _member) constant public returns (uint256,TYPE,bool) {
         return (_members[_member]._id,_members[_member]._type,_members[_member]._enable);
@@ -315,6 +326,9 @@ contract Root is _Root, SafeMath {
         listup(_primaryKey,msg.sender);
         emit TOKEN(createMember(_primaryKey,new Avatar(_erc20,_price,_stamp,_msgPack),TYPE.AVATAR),_erc20);
         _avatarStores    = safeAdd(_avatarStores,1);
+    }
+    function isAvatar(address _who) constant public returns (bool) {
+        return _members[_who]._type==TYPE.AVATAR;
     }
 
     event USER (address indexed _user, address indexed _who, bytes _msgPack);

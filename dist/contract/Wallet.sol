@@ -30,12 +30,15 @@ contract _ERC20Interface {
 
 //-----------------------------------------------------------------------------------------------
 contract _Root {
-    function keyset(uint256 _id) constant public returns (address,address,uint256);
-    function key2id(address _primaryKey) constant public returns (uint256,address,uint256);
+    function id2Handler(uint256 _id) constant public returns (address);
+    function id2KeySet(uint256 _id) constant public returns (address,address);
+    function key2id(address _primaryKey) constant public returns (uint256);
+    function member2id(address _member) constant public returns (uint256);
     function portal() constant public returns (address);
-    function handler(address _contract) constant public returns (address);
+    function handler(address _member) constant public returns (address);
     function isEnable(address _who) constant public returns (bool);
-    function isWallet(address _contract) constant public returns (bool);
+    function isWallet(address _who) constant public returns (bool);
+    function isAvatar(address _who) constant public returns (bool);
     function update(address _user, bytes _msgPack) public;
 }
 contract _Portal {
@@ -45,9 +48,8 @@ contract _Portal {
     function givePoint(address _contract, bool _up, uint256 _point) public;
 }
 contract _Store {
-    address internal erc20;
     function () public payable {revert();}  // Don't accept ETH
-    function currency() public constant returns (address) {return erc20;}
+    function currency() public constant returns (address);
     function checkIn(bool _in, bytes _msgPack) public;
     function voteFor() public constant returns (address);
     function pay(uint256[2][] _items) payable public;
@@ -122,8 +124,8 @@ contract Portal is _Portal, SafeMath {
 contract _Info {
     address internal                root;
 
-    constructor(bytes _msgPack) public {
-        root     = msg.sender;
+    constructor(address _root, bytes _msgPack) public {
+        root     = _root;
         emit INFO(_msgPack);
     }
 
@@ -142,7 +144,7 @@ contract _Info {
 //-----------------------------------------------------------------------------------------------
 contract Wallet is _Info {
 
-    constructor(bytes _msgPack) _Info(_msgPack) public {}
+    constructor(bytes _msgPack) _Info(msg.sender,_msgPack) public {}
     function () public payable {}
 
     //-------------------------------------------------------
